@@ -48,8 +48,13 @@ int(timer_test_int)(uint8_t time) {
   int ipc_sta, r;
   message msg;
   uint8_t bit_no;
+  int irq_set;
 
   if(timer_subscribe_int(&bit_no) != OK) return 1;
+
+  irq_set = bit_no;
+
+  counter = 0;
 
   while(counter < time * 60) {
     if((r = driver_receive(ANY, &msg, &ipc_sta)) != OK) {
@@ -59,8 +64,9 @@ int(timer_test_int)(uint8_t time) {
 
     if(is_ipc_notify(ipc_sta)) {
       if(_ENDPOINT_P(msg.m_source) == HARDWARE) {
-        if(msg.m_notify.interrupts & BIT(bit_no)) {
+        if(msg.m_notify.interrupts & irq_set) {
           timer_int_handler();
+
           if(counter % 60 == 0) {
             timer_print_elapsed_time();
           }
@@ -71,6 +77,5 @@ int(timer_test_int)(uint8_t time) {
 
   if(timer_unsubscribe_int() != OK) return 1;
   
-
   return 0;
 }
