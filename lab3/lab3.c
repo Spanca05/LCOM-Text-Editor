@@ -1,0 +1,137 @@
+#include <lcom/lcf.h>
+
+#include <lcom/lab3.h>
+
+#include <stdbool.h>
+#include <stdint.h>
+
+#include "i8042.h"
+#include "kbd.h"
+
+extern int kbd_hook_id;
+extern uint16_t scancode;
+
+int main(int argc, char *argv[]) {
+  // sets the language of LCF messages (can be either EN-US or PT-PT)
+  lcf_set_language("EN-US");
+
+  // enables to log function invocations that are being "wrapped" by LCF
+  // [comment this out if you don't want/need it]
+  lcf_trace_calls("/home/lcom/labs/lab3/trace.txt");
+
+  // enables to save the output of printf function calls on a file
+  // [comment this out if you don't want/need it]
+  lcf_log_output("/home/lcom/labs/lab3/output.txt");
+
+  // handles control over to LCF
+  // [LCF handles command line arguments and invokes the right function]
+  if (lcf_start(argc, argv))
+    return 1;
+
+  // LCF clean up tasks
+  // [must be the last statement before return]
+  lcf_cleanup();
+
+  return 0;
+}
+
+int(kbd_test_scan)() {
+  int ipc_sta, r;
+  message msg;
+  uint8_t bit_no, MSB, LSB;
+  int irq_set;
+  int fail_count = 0;
+
+  scancode = 0x00;
+
+  // Subscribe the KBC interrupts
+  if(kbd_subscribe_int(&bit_no) != OK) {
+    printf("Error subscribing keyboard interrupts\n");
+    return 1;
+  }
+  printf("Subscrição do teclado feita com sucesso! IRQ: %d\n", bit_no);
+
+  irq_set = BIT(bit_no);
+
+  printf("IRQ_SET configurado corretamente? irq_set = 0x%x\n", irq_set);
+
+
+  // Loop that ends when ESC key is pressed
+  while(scancode != BREAK_ESC) {
+    printf("A receber eventos...\n"); // Debugging
+
+    if((r = driver_receive(ANY, &msg, &ipc_sta)) != OK) {
+      printf("driver_receive failed with: %d", r);
+      fail_count++;
+      if (fail_count >= 5) { // Se falhar 5 vezes seguidas, termina
+        printf("Falhas consecutivas em driver_receive(). Encerrando...\n");
+        break;
+      }
+      continue;
+    }
+
+    printf("driver_receive() recebeu uma mensagem!\n");
+
+    fail_count = 0;
+
+    if(is_ipc_notify(ipc_sta)) {
+      if(_ENDPOINT_P(msg.m_source) == HARDWARE) {
+        if(msg.m_notify.interrupts & irq_set) {
+          printf("Interrupção recebida!\n"); // Debugging
+          kbc_ih();
+          printf("Scancode recebido: 0x%x\n", scancode);
+
+          if(util_get_MSB(scancode, &MSB) != OK) return 1;
+          if(util_get_LSB(scancode, &LSB) != OK) return 1;
+          
+          //Check if scancode is one byte long
+          if(MSB == 0x00) {
+            uint8_t scancode_arr[1] = {LSB};
+
+            if((LSB & BIT(7)) == 0) {
+              if(kbd_print_scancode(true, 1, scancode_arr) != OK) return 1;
+            }
+            else {
+              if(kbd_print_scancode(false, 1, scancode_arr) != OK) return 1;
+            }
+          }
+          else {
+            uint8_t scancode_arr[2] = {MSB, LSB};
+
+            // Scancode is two bytes long
+            if((scancode & BIT(15)) == 0) {
+              if(kbd_print_scancode(true, 2, scancode_arr) != OK) return 1;
+            }
+            else {
+              if(kbd_print_scancode(false, 2, scancode_arr) != OK) return 1;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Unsubscribe the KBC interrupts
+  if(kbd_unsubscribe_int() != OK) {
+    printf("Error unsubscribing keyboard interrupts\n");
+    return 1;
+  }
+
+  printf("Exiting program...\n");
+
+  return 0;
+}
+
+int(kbd_test_poll)() {
+  /* To be completed by the students */
+  printf("%s is not yet implemented!\n", __func__);
+
+  return 1;
+}
+
+int(kbd_test_timed_scan)(uint8_t n) {
+  /* To be completed by the students */
+  printf("%s is not yet implemented!\n", __func__);
+
+  return 1;
+}
