@@ -3,7 +3,7 @@
 #include "i8042.h"
 
 int kbd_hook_id = 1;
-uint16_t scancode;
+uint16_t scancode = 0x00;
 bool is_two_byte = false; // Flag to indicate that we are waiting for the second byte
 int sys_inb_count = 0;
 
@@ -42,26 +42,15 @@ void (kbc_ih)() {
 int (kbd_subscribe_int)(uint8_t *bit_no) {
   if(bit_no == NULL) return 1;
 
-  *bit_no = kbd_hook_id;
-
-  if(sys_irqsetpolicy(KEYBOARD_IRQ, IRQ_REENABLE | IRQ_EXCLUSIVE, &kbd_hook_id) != OK) {
-    printf("Erro ao definir a política de interrupção!\n");  
-    return 1;
-  } 
-
+  *bit_no = BIT(kbd_hook_id);
+  
+  if (sys_irqsetpolicy(KEYBOARD_IRQ, IRQ_REENABLE | IRQ_EXCLUSIVE, &kbd_hook_id)!= 0) return 1;
+  
   return 0;
 }
 
 int (kbd_unsubscribe_int)() {
-  if (sys_irqdisable(&kbd_hook_id) != OK) {  // 🔹 Primeiro, desativa a interrupção
-    printf("Erro ao desativar a interrupção!\n");
-    return 1;
-  }
-
-  if(sys_irqrmpolicy(&kbd_hook_id) != OK) {
-    printf("Erro ao remover a política de interrupção!\n");
-    return 1;
-  }
-
-  return 0;
+  if (sys_irqrmpolicy(&kbd_hook_id)!= 0)return 1;
+  
+  return 0; 
 }

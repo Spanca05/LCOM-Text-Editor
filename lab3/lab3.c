@@ -10,6 +10,7 @@
 
 extern int kbd_hook_id;
 extern uint16_t scancode;
+extern int sys_inb_count;
 
 int main(int argc, char *argv[]) {
   // sets the language of LCF messages (can be either EN-US or PT-PT)
@@ -36,13 +37,10 @@ int main(int argc, char *argv[]) {
 }
 
 int(kbd_test_scan)() {
-  int ipc_sta, r;
+  int ipc_sta;
   message msg;
   uint8_t bit_no, MSB, LSB;
-  int irq_set;
-  int fail_count = 0;
-
-  scancode = 0x00;
+  //int irq_set;
 
   // Subscribe the KBC interrupts
   if(kbd_subscribe_int(&bit_no) != OK) {
@@ -51,35 +49,26 @@ int(kbd_test_scan)() {
   }
   printf("Subscrição do teclado feita com sucesso! IRQ: %d\n", bit_no);
 
-  irq_set = BIT(bit_no);
+  //irq_set = bit_no;
 
-  printf("IRQ_SET configurado corretamente? irq_set = 0x%x\n", irq_set);
+  //printf("IRQ_SET configurado corretamente? irq_set = 0x%x\n", irq_set);
 
 
   // Loop that ends when ESC key is pressed
   while(scancode != BREAK_ESC) {
-    printf("A receber eventos...\n"); // Debugging
+    
+    printf("inside");
 
-    if((r = driver_receive(ANY, &msg, &ipc_sta)) != OK) {
-      printf("driver_receive failed with: %d", r);
-      fail_count++;
-      if (fail_count >= 5) { // Se falhar 5 vezes seguidas, termina
-        printf("Falhas consecutivas em driver_receive(). Encerrando...\n");
-        break;
-      }
+    if((driver_receive(ANY, &msg, &ipc_sta)) != OK) {
+      printf("driver_receive failed");
       continue;
     }
-
-    printf("driver_receive() recebeu uma mensagem!\n");
-
-    fail_count = 0;
+    
 
     if(is_ipc_notify(ipc_sta)) {
       if(_ENDPOINT_P(msg.m_source) == HARDWARE) {
-        if(msg.m_notify.interrupts & irq_set) {
-          printf("Interrupção recebida!\n"); // Debugging
+        if(msg.m_notify.interrupts & bit_no) {
           kbc_ih();
-          printf("Scancode recebido: 0x%x\n", scancode);
 
           if(util_get_MSB(scancode, &MSB) != OK) return 1;
           if(util_get_LSB(scancode, &LSB) != OK) return 1;
@@ -97,7 +86,7 @@ int(kbd_test_scan)() {
           }
           else {
             uint8_t scancode_arr[2] = {MSB, LSB};
-
+            
             // Scancode is two bytes long
             if((scancode & BIT(15)) == 0) {
               if(kbd_print_scancode(true, 2, scancode_arr) != OK) return 1;
@@ -116,6 +105,8 @@ int(kbd_test_scan)() {
     printf("Error unsubscribing keyboard interrupts\n");
     return 1;
   }
+
+  kbd_print_no_sysinb(sys_inb_count);
 
   printf("Exiting program...\n");
 
