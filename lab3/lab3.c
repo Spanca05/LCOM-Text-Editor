@@ -114,10 +114,52 @@ int(kbd_test_scan)() {
 }
 
 int(kbd_test_poll)() {
-  /* To be completed by the students */
-  printf("%s is not yet implemented!\n", __func__);
+  uint8_t status, byte, scancode = 0x00;
+  uint8_t scancode_arr[2];
+  bool is_two_byte = false;
 
-  return 1;
+  while(scancode != BREAK_ESC) {
+    //1. Read status register 0x64
+    if(util_sys_inb(KBC_STATUS_REG, &status) != OK) continue;
+
+    //2. Check if there is data to be read from the output register (bit 0)
+    if(status & OUTPUT_BUFFER_FULL) {
+      //3. Check if there is a parity or timeout error
+      if(status & (PARITY_ERROR | TIMEOUT_ERROR)) continue;
+
+      //4. Read byte from output buffer (0x60)
+      if(util_sys_inb(KBC_OUT_BUF, &byte) != OK) continue;
+
+      //5. Check if scancode is two bytes long
+      if(byte == 0xE0) {
+        is_two_byte = true;
+        continue;
+      }
+
+      if(is_two_byte) {
+        scancode_arr[0] = 0xE0;
+        scancode_arr[1] = byte;
+        scancode = (0xE0 << 8) | byte;
+        is_two_byte = false;
+
+        kbd_print_scancode(!(byte & BIT(7)), 2, scancode_arr);
+      }
+      else {
+        scancode_arr[0] = byte;
+        scancode = byte;
+
+        kbd_print_scancode(!(byte & BIT(7)), 1, scancode_arr);
+      }
+    } 
+  }
+  
+  //6. Reactivate keyboard interrupts
+  if(kbc_restore() != OK) return 1;
+  
+  //7. Print number of sys_inb() calls
+  if(kbd_print_no_sysinb(sys_inb_count) != OK) return 1;
+
+  return 0;
 }
 
 int(kbd_test_timed_scan)(uint8_t n) {

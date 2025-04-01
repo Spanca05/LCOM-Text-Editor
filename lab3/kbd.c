@@ -50,7 +50,28 @@ int (kbd_subscribe_int)(uint8_t *bit_no) {
 }
 
 int (kbd_unsubscribe_int)() {
-  if (sys_irqrmpolicy(&kbd_hook_id)!= 0)return 1;
-  
+  if (sys_irqrmpolicy(&kbd_hook_id)!= 0) return 1;
   return 0; 
+}
+
+int (kbc_restore)() {
+  uint8_t commandWord;
+
+  // Pede ao KBC para enviar o Command Byte
+  if(sys_outb(KBC_STATUS_REG, KBC_READ_CMD_BYTE) != OK) return 1;
+
+  // Lê o Command Byte
+  if(util_sys_inb(KBC_OUT_BUF, &commandWord) != OK) return 1;
+
+  // Ativa as interrupções do teclado (bit 0)
+  commandWord |= BIT(0);
+
+  // Envia comando para escrever novo Command Byte
+  if(sys_outb(KBC_STATUS_REG, 0X60) != OK) return 1;
+
+  // Escreve o novo Command Byte
+  if(sys_outb(0x60, commandWord) != OK) return 1;
+
+  return 0;
+
 }
