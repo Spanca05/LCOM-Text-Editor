@@ -1,7 +1,7 @@
 {
   "git.ignoreLimitWarning": true,
   "C_Cpp.clang_format_fallbackStyle": "LLVM",
-  "diffEditor.ignoreTrimWhitespace": true,
+  "diffEditor.ignoreTrimWhitespace": false,
   "editor.formatOnSave": false,
   "editor.tabSize": 2,
   "editor.wordWrap": "bounded",

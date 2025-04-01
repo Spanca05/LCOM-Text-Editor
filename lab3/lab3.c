@@ -1,5 +1,4 @@
 #include <lcom/lcf.h>
-
 #include <lcom/lab3.h>
 
 #include <stdbool.h>
@@ -11,6 +10,7 @@
 extern int kbd_hook_id;
 extern uint16_t scancode;
 extern int sys_inb_count;
+extern int count;
 
 int main(int argc, char *argv[]) {
   // sets the language of LCF messages (can be either EN-US or PT-PT)
@@ -108,8 +108,6 @@ int(kbd_test_scan)() {
 
   kbd_print_no_sysinb(sys_inb_count);
 
-  printf("Exiting program...\n");
-
   return 0;
 }
 
@@ -163,8 +161,63 @@ int(kbd_test_poll)() {
 }
 
 int(kbd_test_timed_scan)(uint8_t n) {
-  /* To be completed by the students */
-  printf("%s is not yet implemented!\n", __func__);
+  int ipc_sta;
+  message msg;
+  uint8_t kbd_no, timer_no, MSB, LSB;
 
-  return 1;
+  int limit = n * sys_hz();
+  // Subscribe the KBC interrupts
+  if(kbd_subscribe_int(&kbd_no) != OK) return 1;
+
+  // Subscribe the Timer interrupts
+  if(timer_subscribe_int(&timer_no) != OK) return 1;
+
+  // Loop that ends when ESC key is pressed or it does not receive a scancode in n seconds
+  while((scancode != BREAK_ESC) && (count < limit)) {
+    if((driver_receive(ANY, &msg, &ipc_sta)) != OK) continue;
+    
+    if(is_ipc_notify(ipc_sta)) {
+      if(_ENDPOINT_P(msg.m_source) == HARDWARE) {
+        if(msg.m_notify.interrupts & kbd_no) {
+          kbc_ih();
+
+          count = 0;
+          
+          if(util_get_MSB(scancode, &MSB) != OK) return 1;
+          if(util_get_LSB(scancode, &LSB) != OK) return 1;
+          
+          //Check if scancode is one byte long
+          if(MSB == 0x00) {
+            uint8_t scancode_arr[1] = {LSB};
+
+            if((LSB & BIT(7)) == 0) {
+              if(kbd_print_scancode(true, 1, scancode_arr) != OK) return 1;
+            }
+            else {
+              if(kbd_print_scancode(false, 1, scancode_arr) != OK) return 1;
+            }
+          }
+          else {
+            uint8_t scancode_arr[2] = {MSB, LSB};
+            
+            // Scancode is two bytes long
+            if((scancode & BIT(15)) == 0) {
+              if(kbd_print_scancode(true, 2, scancode_arr) != OK) return 1;
+            }
+            else {
+              if(kbd_print_scancode(false, 2, scancode_arr) != OK) return 1;
+            }
+          }
+        }
+        if(msg.m_notify.interrupts & timer_no) {
+          timer_int_handler();
+        }
+      }
+    }
+  }
+
+  kbd_unsubscribe_int();
+  timer_unsubscribe_int();
+
+  return 0;
 }
