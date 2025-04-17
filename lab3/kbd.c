@@ -42,7 +42,7 @@ void (kbc_ih)() {
 int (kbd_subscribe_int)(uint8_t *bit_no) {
   if(bit_no == NULL) return 1;
 
-  *bit_no = BIT(kbd_hook_id);
+  *bit_no = BIT(kbd_hook_id); //! Não percebo bem porquê
   
   if (sys_irqsetpolicy(KEYBOARD_IRQ, IRQ_REENABLE | IRQ_EXCLUSIVE, &kbd_hook_id)!= 0) return 1;
   
@@ -58,7 +58,7 @@ int (kbc_restore)() {
   uint8_t commandWord;
 
   // Pede ao KBC para enviar o Command Byte
-  if(sys_outb(KBC_STATUS_REG, KBC_READ_CMD_BYTE) != OK) return 1;
+  if(sys_outb(KBC_STATUS_REG, KBC_READ_CMD_BYTE) != OK) return 1; //! Não percebo bem os argumentos
 
   // Lê o Command Byte
   if(util_sys_inb(KBC_OUT_BUF, &commandWord) != OK) return 1;
