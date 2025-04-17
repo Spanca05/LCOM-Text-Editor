@@ -5,7 +5,7 @@
 
 int (read_KBC_status)(uint8_t *status) {
     // Read status register
-    return util_sys_inb(0x64, &status);
+    return util_sys_inb(0x64, status);
 }
 
 int(read_KBC_output)(uint8_t port, uint8_t *output, uint8_t mouse) {

@@ -10,6 +10,7 @@
 
 extern struct packet mouse_packet;
 extern uint8_t byte_index;
+extern int count;
 
 int main(int argc, char *argv[]) {
     // sets the language of LCF messages (can be either EN-US or PT-PT)
@@ -53,7 +54,7 @@ int(mouse_test_packet)(uint32_t cnt) {
         if(is_ipc_notify(ipc_sta)) {
             if(_ENDPOINT_P(msg.m_source) == HARDWARE) {
                 if(msg.m_notify.interrupts & mouse_mask) {
-                    kbc_ih();
+                    mouse_ih();
                     mouse_sync_bytes();
 
                     if(byte_index == 3) {
@@ -77,15 +78,62 @@ int(mouse_test_packet)(uint32_t cnt) {
 }
 
 int(mouse_test_async)(uint8_t idle_time) {
-    /* To be completed */
-    printf("%s(%u): under construction\n", __func__, idle_time);
-    return 1;
+    int ipc_sta;
+    message msg;
+    uint8_t mouse_mask, timer_mask;
+
+    //! Rever melhor esta parte
+    uint8_t limit = idle_time * sys_hz();
+
+    // Subscribe mouse interrupts
+    if (mouse_subscribe_int(&mouse_mask) != OK) return 1;
+
+    // Subscribe timer interrupts
+    if (timer_subscribe_int(&timer_mask) != OK) return 1;
+
+    // Activate stream mode
+    if(mouse_write(0xF4) != OK) return 1;
+
+    while(count < limit) {
+        if((driver_receive(ANY, &msg, &ipc_sta)) != OK) continue;
+
+        if(is_ipc_notify(ipc_sta)) {
+            if(_ENDPOINT_P(msg.m_source) == HARDWARE) {
+                if(msg.m_notify.interrupts & timer_mask) {
+                    timer_int_handler();
+                }
+                if(msg.m_notify.interrupts & mouse_mask) {
+                    mouse_ih();
+                    mouse_sync_bytes();
+
+                    if (byte_index == 3) {
+                        mouse_bytes_to_packet();
+                        mouse_print_packet(&mouse_packet);
+                        byte_index = 0;
+                        count = 0; // If packet concluded, reset count
+                    }
+                }
+            }
+        }
+
+    }
+
+    // Deactivate stream mode
+    if(mouse_write(0xF5) != OK) return 1;
+
+    // Unsubscribe mouse interrupts
+    if(mouse_unsubscribe_int() != OK) return 1;
+
+    // Unsubscribe timer interrupts
+    if(timer_unsubscribe_int() != OK) return 1;
+
+  return 0;
 }
 
-int(mouse_test_gesture)() {
-    /* To be completed */
-    printf("%s: under construction\n", __func__);
-    return 1;
+int(mouse_test_gesture)(uint8_t x_len, uint8_t tolerance) {
+  /* To be completed */
+  printf("%s: under construction\n", __func__);
+  return 1;
 }
 
 int(mouse_test_remote)(uint16_t period, uint8_t cnt) {

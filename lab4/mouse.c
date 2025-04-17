@@ -24,7 +24,8 @@ int (mouse_unsubscribe_int)() {
 }
 
 void (mouse_ih)() {
-    if(read_KBC_output(0x60, &current_byte, 1) != OK) printf("%s\n", "Error in reading current byte.");
+      if (read_KBC_output(0x60, &current_byte, 1) != OK)
+        printf("%s\n", "Error in reading current byte.");
 }
 
 void (mouse_sync_bytes)() {
