@@ -53,7 +53,7 @@ void (mouse_bytes_to_packet)() {
     
     mouse_packet.delta_x = (mouse_bytes[0] & BIT(4)) ? (0xFF << 8) | mouse_bytes[1] : (0x00 << 8) | mouse_bytes[1];
     mouse_packet.delta_y = (mouse_bytes[0] & BIT(5)) ? (0xFF << 8) | mouse_bytes[2] : (0x00 << 8) | mouse_bytes[2];
-    ;
+    
 }
 
 int (mouse_write)(uint8_t command) {
