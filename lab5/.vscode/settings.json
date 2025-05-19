@@ -8,6 +8,9 @@
   "editor.wordWrapColumn": 100,
   "files.associations": {
     "ansi.h": "c",
-    "lcf.h": "c"
+    "lcf.h": "c",
+    "xpm.h": "c",
+    "pixmap.h": "c",
+    "graphics.h": "c"
   },
 }

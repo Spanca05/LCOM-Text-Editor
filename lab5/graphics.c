@@ -1,6 +1,14 @@
 #include <lcom/lcf.h>
 #include <lcom/video_gr.h>
+#include <string.h>
 #include "graphics.h"
+
+vbe_mode_info_t mode_info; // Define the global mode_info here
+
+static void *video_mem;
+static uint16_t h_res;
+static uint16_t v_res;
+static uint8_t bits_per_pixel;
 
 int (set_graphic_mode)(uint16_t submode) {
   reg86_t reg86;
@@ -29,42 +37,71 @@ int (set_text_mode)() {
 }
 
 void *(vg_init)(uint16_t mode) {
-  vbe_mode_info_t vbe_info;
+  // Use the global mode_info
+  if(vbe_get_mode_info(mode, &mode_info) != OK) return NULL;
 
-  // 1. Retrieve information about the requested graphics mode (screen resolution, bites per pixel, physical addres of VRAM)
-  if(vbe_get_mode_info(mode, &vbe_info) != OK) return NULL;
+  h_res = mode_info.XResolution;
+  v_res = mode_info.YResolution;
+  bits_per_pixel = mode_info.BitsPerPixel;
 
-  reg86_t reg86;
-
-  // 2. Clear the structure to ensure there is no garbage data
-  memset(&reg86, 0, sizeof(reg86)); //! Zero the structure (make sure it's clean)
-
-  // 3. Set up the registers for the BIOS interrupt call (INT 0x10)
-  reg86.intno = 0x10; // BIOS video interrupt
-  reg86.ah = 0x4F;  // VBE call 
-  reg86.al = 0x02;  // Set VBE mode function
-  reg86.bx = mode | BIT(14);  // Mode number + request linear framebuffer (bit 14)
-
-  // 4. Perform the BIOS interrupt to change the video mode
-  if (sys_int86(&reg86) != OK) return NULL;
-
-  // 5. Retrieve the physical address of the video memory (framebuffer)
-  phys_bytes phys_addr = vbe_info.PhysBasePtr;
-
-  // 6. Calculate the size of the framebuffer (width * height * bytes per pixel)
-  unsigned int framebuffer_size = vbe_info.XResolution * vbe_info.YResolution * (vbe_info.BitsPerPixel / 8);
+  phys_bytes phys_addr = mode_info.PhysBasePtr;
+  unsigned int framebuffer_size = mode_info.XResolution * mode_info.YResolution * (mode_info.BitsPerPixel / 8);
 
   struct minix_mem_range mr;
   mr.mr_base = phys_addr;
-  mr.mr_limit = mr.mr_base + framebuffer_size;
+  mr.mr_limit = mr.mr_base + framebuffer_size - 1;
 
-  // 7. Request permission to map the video memory into the process address space
   if (sys_privctl(SELF, SYS_PRIV_ADD_MEM, &mr) != OK) return NULL;
 
-  // 8. Map the physical video memory into the process virtual memory space
-  void *framebuffer = vm_map_phys(SELF, (void *)phys_addr, framebuffer_size);
-  if(framebuffer == MAP_FAILED) return NULL;
+  video_mem = vm_map_phys(SELF, (void *)phys_addr, framebuffer_size);
+  if(video_mem == MAP_FAILED) return NULL;
 
-  // 9. Return the mapped virtual address to access the video memory
-  return framebuffer;
+  reg86_t reg86;
+  memset(&reg86, 0, sizeof(reg86));
+  reg86.intno = 0x10;
+  reg86.ah = 0x4F;
+  reg86.al = 0x02;
+  reg86.bx = mode | BIT(14);
+
+  if (sys_int86(&reg86) != OK) return NULL;
+
+  return video_mem;
+}
+
+uint32_t normalize_color(uint32_t color) {
+  if (mode_info.MemoryModel == 4 || mode_info.BitsPerPixel == 8) {
+    // Indexed color
+    return color & ((1 << mode_info.BitsPerPixel) - 1);
+  } else {
+    // Direct color
+    uint32_t r = (color >> mode_info.RedFieldPosition) & ((1 << mode_info.RedMaskSize) - 1);
+    uint32_t g = (color >> mode_info.GreenFieldPosition) & ((1 << mode_info.GreenMaskSize) - 1);
+    uint32_t b = (color >> mode_info.BlueFieldPosition) & ((1 << mode_info.BlueMaskSize) - 1);
+    return (r << mode_info.RedFieldPosition) |
+           (g << mode_info.GreenFieldPosition) |
+           (b << mode_info.BlueFieldPosition);
+  }
+}
+
+int (vg_draw_pixel)(uint16_t x, uint16_t y, uint32_t color) {
+  if(x >= h_res || y >= v_res) return 1;
+  uint8_t bytes_per_pixel = (bits_per_pixel + 7) / 8;
+  uint32_t index = (y * h_res + x) * bytes_per_pixel;
+  uint32_t normalized_color = normalize_color(color);
+  if(memcpy((uint8_t *)video_mem + index, &normalized_color, bytes_per_pixel) == NULL) return 1;
+  return 0;
+}
+
+int (vg_draw_hline)(uint16_t x, uint16_t y, uint16_t len, uint32_t color) {
+  for(uint16_t i = 0; i < len; i++) {
+    if(vg_draw_pixel(x + i, y, color) != OK) return 1;
+  }
+  return 0;
+}
+
+int (vg_draw_rectangle)(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color) {
+  for(uint16_t i = 0; i < height; i++) {
+    if(vg_draw_hline(x, y + i, width, color) != OK) return 1;
+  }
+  return 0;
 }
