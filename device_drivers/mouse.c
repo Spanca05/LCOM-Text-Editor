@@ -1,34 +1,53 @@
 #include <lcom/lcf.h>
 
+#include "../utils/result.h"
 #include "i8042.h"
 #include "kbc.h"
 #include "mouse.h"
 
-int           mouse_hook_id = 3; // um valor qualquer [0..7], desde que seja diferente do teclado e do timer
-uint8_t       current_byte;
-uint8_t       byte_index = 0;
-uint8_t       mouse_bytes[3];
-struct packet mouse_packet;
+// Global variables for mouse interrupt handling
+int           mouse_hook_id = 3; // Hook ID for mouse interrupts
+uint8_t       current_byte;      // Current byte read from the mouse
+uint8_t       byte_index = 0;    // Index for assembling mouse packets
+uint8_t       mouse_bytes[3];    // Buffer to store mouse packet bytes
+struct packet mouse_packet;      // Struct to store the parsed mouse packet
 
-int(mouse_subscribe_int)(uint8_t *bit_no) {
-    // Check if bit_no is valid
-    if (bit_no == NULL) return 1;
+/**
+ * @brief Subscribes to mouse interrupts.
+ * @param bit_no Pointer to store the bit number of the interrupt.
+ * @return Result indicating success or specific error.
+ */
+Result(mouse_subscribe_int)(uint8_t *bit_no) {
+    if (bit_no == NULL) return RES_INVALID_ARGUMENT;
 
     *bit_no = BIT(mouse_hook_id);
 
-    return sys_irqsetpolicy(MOUSE_IRQ, IRQ_REENABLE | IRQ_EXCLUSIVE, &mouse_hook_id);
+    if (sys_irqsetpolicy(MOUSE_IRQ, IRQ_REENABLE | IRQ_EXCLUSIVE, &mouse_hook_id) != RES_OK)
+        return RES_PERMISSION_ERROR;
+
+    return RES_OK;
 }
 
-int(mouse_unsubscribe_int)() {
-    return sys_irqrmpolicy(&mouse_hook_id); //! Porque é que é preciso passar por referência?
+/**
+ * @brief Unsubscribes from mouse interrupts.
+ * @return Result indicating success or specific error.
+ */
+Result(mouse_unsubscribe_int)() {
+    if (sys_irqrmpolicy(&mouse_hook_id) != RES_OK) return RES_PERMISSION_ERROR;
+    return RES_OK;
 }
 
+/**
+ * @brief Mouse interrupt handler. Reads the current byte from the mouse.
+ */
 void(mouse_ih)() {
-    if (read_KBC_output(0x60, &current_byte, 1) != OK) printf("%s\n", "Error in reading current byte.");
+    if (read_KBC_output(0x60, &current_byte, 1) != RES_OK) printf("%s\n", "Error in reading current byte.");
 }
 
+/**
+ * @brief Synchronizes mouse bytes to form a complete packet.
+ */
 void(mouse_sync_bytes)() {
-    // Check if current_byte is control byte
     if ((current_byte & BIT(3)) && byte_index == 0) {
         mouse_bytes[byte_index] = current_byte;
         byte_index++;
@@ -38,8 +57,10 @@ void(mouse_sync_bytes)() {
     }
 }
 
+/**
+ * @brief Converts the synchronized mouse bytes into a packet structure.
+ */
 void(mouse_bytes_to_packet)() {
-    //! C não permite atribuição direta de arrays
     for (int i = 0; i < 3; i++) mouse_packet.bytes[i] = mouse_bytes[i];
 
     mouse_packet.rb = mouse_bytes[0] & BIT(1);
@@ -53,27 +74,26 @@ void(mouse_bytes_to_packet)() {
     mouse_packet.delta_y = (mouse_bytes[0] & BIT(5)) ? (0xFF << 8) | mouse_bytes[2] : (0x00 << 8) | mouse_bytes[2];
 }
 
-int(mouse_write)(uint8_t command) {
+/**
+ * @brief Sends a command to the mouse.
+ * @param command The command to send.
+ * @return Result indicating success or specific error.
+ */
+Result(mouse_write)(uint8_t command) {
     uint8_t attempts = 10;
     uint8_t mouse_response;
 
     while (attempts) {
-        // Tell KBC that we want to write to the mouse
-        //! Porque é que é para a port 0x64 e não para a 0x60
-        if (write_KBC_command(0x64, 0xD4) != OK) return 1;
+        if (write_KBC_command(0x64, 0xD4) != RES_OK) return RES_IO_ERROR;
 
-        // Write to the mouse
-        if (write_KBC_command(0x60, command) != OK) return 1;
+        if (write_KBC_command(0x60, command) != RES_OK) return RES_IO_ERROR;
 
-        // Check output buffer
-        if (util_sys_inb(0x60, &mouse_response) != OK) return 1;
+        if (read_KBC_output(0x60, &mouse_response, 1) != RES_OK) return RES_IO_ERROR;
 
-        // If successful
-        if (mouse_response == ACK) return 0;
-        else if (mouse_response == ERROR) return 1; // In case of error, abort
+        if (mouse_response == 0xFA) return RES_OK;
 
-        tickdelay(micros_to_ticks(20000));
         attempts--;
     }
-    return 1;
+
+    return RES_TIMEOUT;
 }

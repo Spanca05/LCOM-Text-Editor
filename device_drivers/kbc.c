@@ -1,71 +1,83 @@
+#include "../utils/result.h"
 #include <lcom/lcf.h>
 
 #include "i8042.h"
 #include "kbc.h"
 
-int(read_KBC_status)(uint8_t *status) {
-    // Read status register
-    return util_sys_inb(0x64, status);
+/**
+ * @brief Reads the status register of the keyboard controller.
+ * @param status Pointer to store the status byte.
+ * @return Result indicating success or specific error.
+ */
+Result(read_KBC_status)(uint8_t *status) {
+    if (status == NULL) return RES_INVALID_ARGUMENT;
+
+    if (util_sys_inb(0x64, status) != RES_OK) return RES_IO_ERROR;
+    return RES_OK;
 }
 
-int(read_KBC_output)(uint8_t port, uint8_t *output, uint8_t mouse) {
+/**
+ * @brief Reads the output buffer of the keyboard controller.
+ * @param port The port to read from (0x60 for data, 0x64 for status).
+ * @param output Pointer to store the output byte.
+ * @param mouse Flag indicating whether the output is from the mouse.
+ * @return Result indicating success or specific error.
+ */
+Result(read_KBC_output)(uint8_t port, uint8_t *output, uint8_t mouse) {
+    if (output == NULL) return RES_INVALID_ARGUMENT;
+
     uint8_t status;
     uint8_t attempts = 10;
 
     while (attempts) {
-        if (read_KBC_status(&status) != OK) return 1;
+        if (read_KBC_status(&status) != RES_OK) return RES_IO_ERROR;
 
-        // If output buffer empty, wait and retry
         if (!(status & BIT(0))) {
             tickdelay(micros_to_ticks(20000));
             attempts--;
             continue;
         }
 
-        //! Tem que ler o byte antes de verificar os erros , porque mesmo que tenha erros, é preciso ler o byte, e se
-        //! fosse depois de verificar se tinha erros, não iria descartar o byte
-        // Read byte in the output buffer
-        if (util_sys_inb(port, output) != OK) return 1;
+        uint8_t temp_output;
+        if (util_sys_inb(port, &temp_output) != RES_OK) return RES_IO_ERROR;
 
-        // Check if there was some communication error
-        if (status & BIT(7) || status & BIT(6)) return 1;
+        if (status & BIT(7) || status & BIT(6)) return RES_HARDWARE_ERROR;
 
-        // Check if there is no data to be read
-        if (!(status & BIT(0))) return 1;
+        if (!(status & BIT(0))) return RES_IO_ERROR;
 
-        // If data is expected to come from mouse and it doesn't
-        if (mouse && !(status & BIT(5))) return 1;
+        if (mouse && !(status & BIT(5))) return RES_IO_ERROR;
 
-        // If data is expected to come from keyboard and it doesn't
-        if (!mouse && (status & BIT(5))) return 1;
+        if (!mouse && (status & BIT(5))) return RES_IO_ERROR;
 
-        // If successful, return
-        return 0;
+        *output = temp_output;
+        return RES_OK;
     }
-    // If after n attempts, not successfull, return with error
-    return 1;
+
+    return RES_TIMEOUT;
 }
 
-int(write_KBC_command)(uint8_t port, uint8_t commandByte) {
+/**
+ * @brief Writes a command byte to the keyboard controller.
+ * @param port The port to write to (0x60 for data, 0x64 for command).
+ * @param commandByte The command byte to write.
+ * @return Result indicating success or specific error.
+ */
+Result(write_KBC_command)(uint8_t port, uint8_t commandByte) {
     uint8_t status;
     uint8_t attempts = 10;
 
     while (attempts) {
-        // Read status register
-        if (read_KBC_status(&status) != OK) return 1;
+        if (read_KBC_status(&status) != RES_OK) return RES_IO_ERROR;
 
-        // Check if input buffer full
         if (status & BIT(1)) {
             tickdelay(micros_to_ticks(20000));
             attempts--;
             continue;
         }
 
-        //! Porquê port? Não é sempre o mesmo register?
-        //* Pode ser 0x64 para passar comandos para o KBC, ou 0x60 para passar argumentos
-        if (sys_outb(port, commandByte) != OK) return 1;
+        if (sys_outb(port, commandByte) != RES_OK) return RES_IO_ERROR;
 
-        return 0;
+        return RES_OK;
     }
-    return 1;
+    return RES_TIMEOUT;
 }

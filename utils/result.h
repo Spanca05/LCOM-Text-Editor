@@ -8,9 +8,14 @@ typedef enum {
     // Error, no specific message
     RES_ERROR,
 
-    // Add more specific errors here
-    // Always add a comment above it explaining what it means (it can be multiple lines)
-    // Example errors: RES_IO_ERROR, RES_INVALID_ARGUMENT, RES_TIMEOUT...
+    // Specific errors
+    RES_INVALID_ARGUMENT, // Invalid argument passed to a function
+    RES_IO_ERROR,         // Input/output operation failed
+    RES_MEMORY_ERROR,     // Memory allocation or mapping failed
+    RES_PERMISSION_ERROR, // Insufficient permissions for the operation
+    RES_TIMEOUT,          // Operation timed out
+    RES_UNSUPPORTED_MODE, // Unsupported mode or configuration
+    RES_HARDWARE_ERROR    // Hardware-related error
 } Result;
 
 #endif

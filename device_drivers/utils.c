@@ -1,5 +1,6 @@
 #include <lcom/lcf.h>
 
+#include "utils/result.h"
 #include <stdint.h>
 
 extern int sys_inb_count;
@@ -21,7 +22,7 @@ int(util_get_MSB)(uint16_t val, uint8_t *msb) {
 int(util_sys_inb)(int port, uint8_t *value) {
     uint32_t val;
 
-    if (sys_inb(port, &val) != OK) return 1;
+    if (sys_inb(port, &val) != RES_OK) return 1;
 
 #ifdef LAB3
     sys_inb_count++;

@@ -1,16 +1,21 @@
+#include "../utils/result.h"
 #include "i8042.h"
 #include <lcom/lcf.h>
 
+// Global variables for keyboard interrupt handling
 int      kbd_hook_id   = 1;
 uint16_t scancode      = 0x00;
 bool     is_two_byte   = false; // Flag to indicate that we are waiting for the second byte
 int      sys_inb_count = 0;
 
+/**
+ * @brief Keyboard interrupt handler. Reads scancodes from the keyboard.
+ */
 void(kbc_ih)() {
     uint8_t status, byte;
 
     // Read status register
-    if (util_sys_inb(KBC_STATUS_REG, &status) != OK) return;
+    if (util_sys_inb(KBC_STATUS_REG, &status) != RES_OK) return;
 
     // Check if there was some communication error
     if (status & BIT(7) || status & BIT(6)) return;
@@ -18,7 +23,7 @@ void(kbc_ih)() {
     // Check if there is no data to be read
     if (!(status & BIT(0))) return;
 
-    if (util_sys_inb(KBC_OUT_BUF, &byte) != OK) return;
+    if (util_sys_inb(KBC_OUT_BUF, &byte) != RES_OK) return;
 
     // Check if scancode is one or two bytes long
     if (byte == 0xE0) {
@@ -35,38 +40,46 @@ void(kbc_ih)() {
     }
 }
 
-int(kbd_subscribe_int)(uint8_t *bit_no) {
-    if (bit_no == NULL) return 1;
+/**
+ * @brief Subscribes to keyboard interrupts.
+ * @param bit_no Pointer to store the bit number of the interrupt.
+ * @return Result indicating success or specific error.
+ */
+Result(kbd_subscribe_int)(uint8_t *bit_no) {
+    if (bit_no == NULL) return RES_INVALID_ARGUMENT;
 
-    *bit_no = BIT(kbd_hook_id); //! Não percebo bem porquê
+    *bit_no = BIT(kbd_hook_id);
 
-    if (sys_irqsetpolicy(KEYBOARD_IRQ, IRQ_REENABLE | IRQ_EXCLUSIVE, &kbd_hook_id) != 0) return 1;
+    if (sys_irqsetpolicy(KEYBOARD_IRQ, IRQ_REENABLE | IRQ_EXCLUSIVE, &kbd_hook_id) != 0) return RES_PERMISSION_ERROR;
 
-    return 0;
+    return RES_OK;
 }
 
-int(kbd_unsubscribe_int)() {
-    if (sys_irqrmpolicy(&kbd_hook_id) != 0) return 1;
-    return 0;
+/**
+ * @brief Unsubscribes from keyboard interrupts.
+ * @return Result indicating success or specific error.
+ */
+Result(kbd_unsubscribe_int)() {
+    if (sys_irqrmpolicy(&kbd_hook_id) != 0) return RES_PERMISSION_ERROR;
+    return RES_OK;
 }
 
-int(kbc_restore)() {
+/**
+ * @brief Restores the keyboard controller to its default state.
+ * @return Result indicating success or specific error.
+ */
+Result(kbc_restore)() {
     uint8_t commandWord;
 
-    // Pede ao KBC para enviar o Command Byte
-    if (sys_outb(KBC_STATUS_REG, KBC_READ_CMD_BYTE) != OK) return 1; //! Não percebo bem os argumentos
+    if (sys_outb(KBC_STATUS_REG, KBC_READ_CMD_BYTE) != RES_OK) return RES_IO_ERROR;
 
-    // Lê o Command Byte
-    if (util_sys_inb(KBC_OUT_BUF, &commandWord) != OK) return 1;
+    if (util_sys_inb(KBC_OUT_BUF, &commandWord) != RES_OK) return RES_IO_ERROR;
 
-    // Ativa as interrupções do teclado (bit 0)
     commandWord |= BIT(0);
 
-    // Envia comando para escrever novo Command Byte
-    if (sys_outb(KBC_STATUS_REG, 0X60) != OK) return 1;
+    if (sys_outb(KBC_STATUS_REG, 0X60) != RES_OK) return RES_IO_ERROR;
 
-    // Escreve o novo Command Byte
-    if (sys_outb(0x60, commandWord) != OK) return 1;
+    if (sys_outb(0x60, commandWord) != RES_OK) return RES_IO_ERROR;
 
-    return 0;
+    return RES_OK;
 }
