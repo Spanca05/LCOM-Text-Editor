@@ -4,15 +4,22 @@
 #include "../utils/result.h"
 #include <lcom/lcf.h>
 
-
-extern uint16_t scancode;
-
 /**
- * @brief Interrupt handler for the Keyboard, updates the global variable scancode.
+ * @brief Handles keyboard interrupts and retrieves the scancode.
  *
- * @return Void. The function exits early if any error or invalid state is detected.
+ * This function reads the keyboard status register and output buffer to
+ * retrieve the scancode of the key pressed or released. It handles both
+ * single-byte and two-byte scancodes.
+ *
+ * @param scancode Pointer to store the retrieved scancode.
+ * @return Result indicating success or specific error:
+ *         - RES_OK: Scancode successfully retrieved.
+ *         - RES_IO_ERROR: I/O error occurred.
+ *         - RES_TIMEOUT: Timeout error occurred.
+ *         - RES_ERROR: No data available in the output buffer.
+ *         - RES_NOT_READY: Waiting for the second byte of a two-byte scancode.
  */
-void(kbc_ih)();
+Result(keyboard_ih)(uint16_t *scancode);
 
 /**
  * @brief Subscribes to keyboard interrupts.

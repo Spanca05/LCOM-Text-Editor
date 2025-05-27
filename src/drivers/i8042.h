@@ -13,6 +13,7 @@
 #define KBC_WRITE_CMD_PORT 0x64              /** @brief Write command to the controller */
 #define KBC_WRITE_CMD_BYTE 0x60              /** @brief Write command byte */
 #define KBC_READ_CMD_BYTE  0x20              /** @brief Read command byte */
+#define KBC_SEND_TO_MOUSE  0xD4              /** @brief Send command directly to mouse without interpretation */
 
 #define PARITY_ERROR(st)       (st & BIT(7)) /** @brief Parity error in communication */
 #define TIMEOUT_ERROR(st)      (st & BIT(6)) /** @brief Timeout error in communication */
