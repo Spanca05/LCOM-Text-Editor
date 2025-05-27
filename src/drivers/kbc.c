@@ -1,4 +1,5 @@
 #include "../utils/result.h"
+#include "../utils/utils.h"
 #include <lcom/lcf.h>
 
 #include "i8042.h"
@@ -12,7 +13,7 @@
 Result(read_KBC_status)(uint8_t *status) {
     if (status == NULL) return RES_INVALID_ARGUMENT;
 
-    if (util_sys_inb(0x64, status) != RES_OK) return RES_IO_ERROR;
+    if (res_util_sys_inb(0x64, status) != RES_OK) return RES_IO_ERROR;
     return RES_OK;
 }
 
@@ -39,7 +40,7 @@ Result(read_KBC_output)(uint8_t port, uint8_t *output, uint8_t mouse) {
         }
 
         uint8_t temp_output;
-        if (util_sys_inb(port, &temp_output) != RES_OK) return RES_IO_ERROR;
+        if (res_util_sys_inb(port, &temp_output) != RES_OK) return RES_IO_ERROR;
 
         if (status & BIT(7) || status & BIT(6)) return RES_HARDWARE_ERROR;
 

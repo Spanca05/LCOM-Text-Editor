@@ -1,4 +1,5 @@
 #include "../utils/result.h"
+#include "../utils/utils.h"
 #include "i8042.h"
 #include <lcom/lcf.h>
 
@@ -15,7 +16,7 @@ void(kbc_ih)() {
     uint8_t status, byte;
 
     // Read status register
-    if (util_sys_inb(KBC_STATUS_REG, &status) != RES_OK) return;
+    if (res_util_sys_inb(KBC_STATUS_REG, &status) != RES_OK) return;
 
     // Check if there was some communication error
     if (status & BIT(7) || status & BIT(6)) return;
@@ -23,7 +24,7 @@ void(kbc_ih)() {
     // Check if there is no data to be read
     if (!(status & BIT(0))) return;
 
-    if (util_sys_inb(KBC_OUT_BUF, &byte) != RES_OK) return;
+    if (res_util_sys_inb(KBC_OUT_BUF, &byte) != RES_OK) return;
 
     // Check if scancode is one or two bytes long
     if (byte == 0xE0) {
@@ -73,7 +74,7 @@ Result(kbc_restore)() {
 
     if (sys_outb(KBC_STATUS_REG, KBC_READ_CMD_BYTE) != RES_OK) return RES_IO_ERROR;
 
-    if (util_sys_inb(KBC_OUT_BUF, &commandWord) != RES_OK) return RES_IO_ERROR;
+    if (res_util_sys_inb(KBC_OUT_BUF, &commandWord) != RES_OK) return RES_IO_ERROR;
 
     commandWord |= BIT(0);
 

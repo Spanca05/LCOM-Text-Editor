@@ -1,4 +1,5 @@
 #include "../utils/result.h"
+#include "../utils/utils.h"
 #include <lcom/lcf.h>
 #include <lcom/timer.h>
 
@@ -16,7 +17,7 @@ int timer_hook_id = 0;
  * @param freq The desired frequency.
  * @return Result indicating success or specific error.
  */
-Result(timer_set_frequency)(uint8_t timer, uint32_t freq) {
+Result(res_timer_set_frequency)(uint8_t timer, uint32_t freq) {
     if (freq > TIMER_FREQ) return RES_INVALID_ARGUMENT;
 
     uint16_t counter = TIMER_FREQ / freq;
@@ -52,7 +53,7 @@ Result(timer_set_frequency)(uint8_t timer, uint32_t freq) {
  * @param bit_no Pointer to store the bit number of the interrupt.
  * @return Result indicating success or specific error.
  */
-Result(timer_subscribe_int)(uint8_t *bit_no) {
+Result(res_timer_subscribe_int)(uint8_t *bit_no) {
     if (bit_no == NULL) return RES_INVALID_ARGUMENT;
 
     *bit_no = BIT(timer_hook_id);
@@ -66,7 +67,7 @@ Result(timer_subscribe_int)(uint8_t *bit_no) {
  * @brief Unsubscribes from timer interrupts.
  * @return Result indicating success or specific error.
  */
-Result(timer_unsubscribe_int)() {
+Result(res_timer_unsubscribe_int)() {
     if (sys_irqrmpolicy(&timer_hook_id) != RES_OK) return RES_PERMISSION_ERROR;
     return RES_OK;
 }
@@ -82,13 +83,13 @@ void(timer_int_handler)() { count++; }
  * @param st Pointer to store the status byte.
  * @return Result indicating success or specific error.
  */
-Result(timer_get_conf)(uint8_t timer, uint8_t *st) {
+Result(res_timer_get_conf)(uint8_t timer, uint8_t *st) {
     if (timer > 2) return RES_INVALID_ARGUMENT;
 
     uint8_t read_back_cmd = TIMER_RB_CMD | TIMER_RB_COUNT_ | TIMER_RB_SEL(timer);
     if (sys_outb(TIMER_CTRL, read_back_cmd) != RES_OK) return RES_IO_ERROR;
 
-    if (util_sys_inb(TIMER_0 + timer, st) != RES_OK) return RES_IO_ERROR;
+    if (res_util_sys_inb(TIMER_0 + timer, st) != RES_OK) return RES_IO_ERROR;
 
     return RES_OK;
 }
@@ -100,7 +101,7 @@ Result(timer_get_conf)(uint8_t timer, uint8_t *st) {
  * @param field The field to interpret and display.
  * @return Result indicating success or specific error.
  */
-Result(timer_display_conf)(uint8_t timer, uint8_t st, enum timer_status_field field) {
+Result(res_timer_display_conf)(uint8_t timer, uint8_t st, enum timer_status_field field) {
     union timer_status_field_val val;
 
     switch (field) {

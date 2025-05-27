@@ -32,12 +32,19 @@ int main(int argc, char *argv[]) {
     lcf_set_language("EN-US");
     if (lcf_start(argc, argv)) return EXIT_FAILURE;
 
+    // Cleanup and restore text mode
+    cleanup();
+    return EXIT_SUCCESS;
+}
+
+int(proj_main_loop)(int argc, char *argv[]) {
     // Set graphics mode and map video memory
     if (set_graphic_mode(GRAPHICS_MODE) != RES_OK) {
         fprintf(stderr, "Failed to set graphics mode\n");
         return EXIT_FAILURE;
     }
-    if (graphics_init(GRAPHICS_MODE, &video_mem) != RES_OK) {
+
+    if (res_vg_init(GRAPHICS_MODE, &video_mem) != RES_OK) {
         fprintf(stderr, "Failed to map video memory\n");
         return EXIT_FAILURE;
     }
@@ -50,7 +57,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Subscribe timer interrupts
-    if (timer_subscribe_int(&timer_bit) != RES_OK) {
+    if (res_timer_subscribe_int(&timer_bit) != RES_OK) {
         fprintf(stderr, "Failed to subscribe timer\n");
         cleanup();
         return EXIT_FAILURE;
@@ -78,9 +85,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // Cleanup and restore text mode
-    cleanup();
-    return EXIT_SUCCESS;
+    return RES_OK;
 }
 
 bool handle_keyboard(uint16_t scancode) {
@@ -92,7 +97,7 @@ bool handle_keyboard(uint16_t scancode) {
 
 void render_screen() {
     // Clear screen to light grey
-    graphics_draw_rectangle(0, 0, mode_info.XResolution, mode_info.YResolution, 0xCCCCCC);
+    res_vg_draw_rectangle(0, 0, mode_info.XResolution, mode_info.YResolution, 0xCCCCCC);
     // TODO: draw text buffer and cursor here using vg_draw_pixel or custom font routines
 }
 
