@@ -34,13 +34,13 @@ void cleanup() {
 
 void setup_graphics() {
     // Set graphics mode and map video memory
-    if (set_graphic_mode(VBE_1024P_DC) != RES_OK) {
+    if (set_graphic_mode(VBE_864P_DC) != RES_OK) {
         fprintf(stderr, "Failed to set graphics mode\n");
         cleanup();
         exit(EXIT_FAILURE);
     }
 
-    if (res_vg_init(VBE_1024P_DC, &video_mem) != RES_OK) {
+    if (res_vg_init(VBE_864P_DC, &video_mem) != RES_OK) {
         fprintf(stderr, "Failed to map video memory\n");
         cleanup();
         exit(EXIT_FAILURE);
@@ -86,7 +86,6 @@ int(proj_main_loop)(int argc, char *argv[]) {
                 if (scancode == BREAK_ESC) running = false;
             }
         }
-
         render_screen();
     }
 
@@ -96,7 +95,7 @@ int(proj_main_loop)(int argc, char *argv[]) {
 }
 
 void render_screen() {
-    // Clear screen to light grey
-    res_vg_draw_rectangle(0, 0, mode_info.XResolution, mode_info.YResolution, 0xCCCCCC);
+    // Clear screen to red
+    res_vg_draw_rectangle(0, 0, mode_info.XResolution, mode_info.YResolution, 0xFF0000);
     // TODO: draw text buffer and cursor here using vg_draw_pixel or custom font routines
 }

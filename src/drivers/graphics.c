@@ -70,6 +70,7 @@ Result(res_vg_init)(uint16_t mode, void **video_memory) {
     if (sys_int86(&reg86) != RES_OK) return RES_HARDWARE_ERROR;
 
     *video_memory = mapped_mem;
+    video_mem     = mapped_mem; // Linha benção que fez retângulo desenhar
     return RES_OK;
 }
 
