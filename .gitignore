@@ -1,26 +1,51 @@
-# Build artifacts
+# Compiled object files
 *.o
-*.so
-*.a
+*.lo
+*.la
+*.al
+
+# Compiled binary files
 *.out
 *.exe
 
-# Temporary files
-*.tmp
+# Libraries
+*.lib
+*.a
+*.so
+*.dylib
+*.dll
+
+# Debug files
+*.gdbinit
+*.dSYM/
+*.stackdump
+
+# Minix-specific temporary files
+*.core
+*.swap
+
+# Logs and temporary files
 *.log
+*.tmp
 *.bak
 *.swp
 *.swo
 
-# Editor-specific files
+# Build directories
+build/
+bin/
+obj/
+dist/
+
+# IDE-specific files
 .vscode/
-.idea/
-*.iml
 !.vscode/c_cpp_properties.json
+.idea/
+*.code-workspace
 
-# OS-specific files
-.DS_Store
-Thumbs.db
+# LCF-generated files
+trace.txt
+output.txt
 
-# Generated files
-*.generated.*
+# Git-specific files
+*.orig
