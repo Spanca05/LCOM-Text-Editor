@@ -12,7 +12,9 @@ SRCS = main.c \
 		keyboard.c \
 		mouse.c \
 		graphics.c \
-		utils.c 
+		utils.c \
+		font8x16.c \
+		text_renderer.c
 
 # additional compilation flags
 # "-Wall -Wextra -Werror -I . -std=c11 -Wno-unused-parameter" are already set
