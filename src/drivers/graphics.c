@@ -20,7 +20,7 @@ Result(set_text_mode)() {
     reg86.intno = 0x10;
     reg86.ah    = 0x00;
     reg86.al    = 0x03;
-    reg86.bx    = 0x0000; //! Para que é que serve cada um?!
+    reg86.bx    = 0x0000;
 
     if (sys_int86(&reg86) != RES_OK) return RES_HARDWARE_ERROR;
     return RES_OK;
@@ -28,7 +28,7 @@ Result(set_text_mode)() {
 
 Result(set_graphic_mode)(uint16_t submode) {
     reg86_t reg86;
-    memset(&reg86, 0, sizeof(reg86)); //! Zero the structure (make sure it's clean)
+    memset(&reg86, 0, sizeof(reg86));
 
     reg86.intno = 0x10;
     reg86.ah    = 0x4F;
@@ -39,12 +39,6 @@ Result(set_graphic_mode)(uint16_t submode) {
     return RES_OK;
 }
 
-/**
- * @brief Initializes the video graphics mode.
- * @param mode The VBE mode to initialize.
- * @param video_memory Pointer to store the mapped video memory address.
- * @return Result indicating success or specific error.
- */
 Result(res_vg_init)(uint16_t mode, void **video_memory) {
     if (video_memory == NULL) return RES_INVALID_ARGUMENT;
 
@@ -79,11 +73,6 @@ Result(res_vg_init)(uint16_t mode, void **video_memory) {
     return RES_OK;
 }
 
-/**
- * @brief Normalizes a color value based on the current mode.
- * @param color The color value to normalize.
- * @return Normalized color value.
- */
 Result(res_normalize_color)(uint32_t *color) {
     if (mode_info.MemoryModel == 4 || mode_info.BitsPerPixel == 8) {
         // Indexed color
@@ -101,13 +90,6 @@ Result(res_normalize_color)(uint32_t *color) {
     return RES_OK;
 }
 
-/**
- * @brief Draws a pixel at the specified coordinates.
- * @param x The x-coordinate.
- * @param y The y-coordinate.
- * @param color The color of the pixel.
- * @return Result indicating success or specific error.
- */
 Result(res_vg_draw_pixel)(uint16_t x, uint16_t y, uint32_t color) {
     if (x >= h_res || y >= v_res) return RES_INVALID_ARGUMENT;
     uint8_t  bytes_per_pixel = (bits_per_pixel + 7) / 8;
@@ -117,33 +99,14 @@ Result(res_vg_draw_pixel)(uint16_t x, uint16_t y, uint32_t color) {
     return RES_OK;
 }
 
-/**
- * @brief Draws a horizontal line starting at the specified coordinates.
- * @param x The starting x-coordinate.
- * @param y The y-coordinate.
- * @param len The length of the line.
- * @param color The color of the line.
- * @return Result indicating success or specific error.
- */
 Result(res_vg_draw_hline)(uint16_t x, uint16_t y, uint16_t len, uint32_t color) {
-    for (uint16_t i = 0; i < len; i++) {
+    for (uint16_t i = 0; i < len; i++)
         if (res_vg_draw_pixel(x + i, y, color) != RES_OK) return RES_IO_ERROR;
-    }
     return RES_OK;
 }
 
-/**
- * @brief Draws a rectangle starting at the specified coordinates.
- * @param x The starting x-coordinate.
- * @param y The starting y-coordinate.
- * @param width The width of the rectangle.
- * @param height The height of the rectangle.
- * @param color The color of the rectangle.
- * @return Result indicating success or specific error.
- */
 Result(res_vg_draw_rectangle)(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color) {
-    for (uint16_t i = 0; i < height; i++) {
+    for (uint16_t i = 0; i < height; i++)
         if (res_vg_draw_hline(x, y + i, width, color) != RES_OK) return RES_IO_ERROR;
-    }
     return RES_OK;
 }

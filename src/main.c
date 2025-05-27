@@ -12,58 +12,60 @@
 #include "drivers/keyboard.h"
 #include "drivers/timer.h"
 
-#define GRAPHICS_MODE VBE_768P_INDEXED
-#define TEXT_MODE     0x03
-
 static uint8_t kbd_bit;
 static uint8_t timer_bit;
 static void   *video_mem = NULL;
 
 bool handle_keyboard(uint16_t scancode);
 void render_screen();
-void cleanup();
 
 int main(int argc, char *argv[]) {
     // Initialize LCF and Minix framework
     lcf_set_language("EN-US");
     if (lcf_start(argc, argv)) return EXIT_FAILURE;
-
-    // Cleanup and restore text mode
-    cleanup();
     return EXIT_SUCCESS;
 }
 
 void cleanup() {
-    timer_unsubscribe_int();
-    kbd_unsubscribe_int();
+    res_timer_unsubscribe_int();
+    keyboard_unsubscribe_int();
     if (set_text_mode() != RES_OK) fprintf(stderr, "Failed to restore text mode\n");
 }
 
-int(proj_main_loop)(int argc, char *argv[]) {
+void setup_graphics() {
     // Set graphics mode and map video memory
-    if (set_graphic_mode(GRAPHICS_MODE) != RES_OK) {
+    if (set_graphic_mode(VBE_1024P_DC) != RES_OK) {
         fprintf(stderr, "Failed to set graphics mode\n");
-        return EXIT_FAILURE;
+        cleanup();
+        exit(EXIT_FAILURE);
     }
 
-    if (res_vg_init(GRAPHICS_MODE, &video_mem) != RES_OK) {
+    if (res_vg_init(VBE_1024P_DC, &video_mem) != RES_OK) {
         fprintf(stderr, "Failed to map video memory\n");
-        return EXIT_FAILURE;
+        cleanup();
+        exit(EXIT_FAILURE);
     }
+}
 
+void subscribe_to_devices() {
     // Subscribe timer interrupts
     if (res_timer_subscribe_int(&timer_bit) != RES_OK) {
         fprintf(stderr, "Failed to subscribe timer\n");
         cleanup();
-        return EXIT_FAILURE;
+        exit(EXIT_FAILURE);
     }
 
     // Subscribe keyboard interrupts
     if (keyboard_subscribe_int(&kbd_bit) != RES_OK) {
         fprintf(stderr, "Failed to subscribe keyboard\n");
         cleanup();
-        return EXIT_FAILURE;
+        exit(EXIT_FAILURE);
     }
+}
+
+int(proj_main_loop)(int argc, char *argv[]) {
+    setup_graphics();
+    subscribe_to_devices();
 
     bool    running = true;
     int     ipc_status;
@@ -88,13 +90,12 @@ int(proj_main_loop)(int argc, char *argv[]) {
         render_screen();
     }
 
-
+    // Cleanup and restore text mode
+    cleanup();
     return RES_OK;
 }
 
 bool handle_keyboard(uint16_t scancode) {
-    if (scancode == BREAK_ESC) // ESC pressed
-        return false;
     // TODO: handle printable characters, backspace, arrow keys, etc.
     return true;
 }
