@@ -1,30 +1,37 @@
+#include "kbc.h"
 #include "../utils/result.h"
 #include "../utils/utils.h"
-#include <lcom/lcf.h>
-
 #include "i8042.h"
-#include "kbc.h"
+#include <lcom/lcf.h>
+#include <stdbool.h>
 
-/**
- * @brief Reads the status register of the keyboard controller.
- * @param status Pointer to store the status byte.
- * @return Result indicating success or specific error.
- */
 Result(read_KBC_status)(uint8_t *status) {
     if (status == NULL) return RES_INVALID_ARGUMENT;
-
-    if (res_util_sys_inb(0x64, status) != RES_OK) return RES_IO_ERROR;
+    if (res_util_sys_inb(KBC_STATUS_REG, status) != RES_OK) return RES_IO_ERROR;
     return RES_OK;
 }
 
-/**
- * @brief Reads the output buffer of the keyboard controller.
- * @param port The port to read from (0x60 for data, 0x64 for status).
- * @param output Pointer to store the output byte.
- * @param mouse Flag indicating whether the output is from the mouse.
- * @return Result indicating success or specific error.
- */
-Result(read_KBC_output)(uint8_t port, uint8_t *output, uint8_t mouse) {
+Result(write_KBC_command)(uint8_t port, uint8_t dataByte) {
+    if (port != KBC_CMD_REG && port != KBC_IN_BUF) return RES_INVALID_ARGUMENT;
+
+    uint8_t status;
+    uint8_t attempts = 10;
+
+    while (attempts) {
+        if (read_KBC_status(&status) != RES_OK) return RES_IO_ERROR;
+        if (INPUT_BUFFER_FULL(status)) {
+            tickdelay(micros_to_ticks(20000));
+            attempts--;
+            continue;
+        }
+        if (sys_outb(port, dataByte) != RES_OK) return RES_IO_ERROR;
+        return RES_OK;
+    }
+    return RES_TIMEOUT;
+}
+
+Result(read_KBC_output)(uint8_t port, uint8_t *output, bool mouse) {
+    if (port != KBC_CMD_REG && port != KBC_OUT_BUF) return RES_INVALID_ARGUMENT;
     if (output == NULL) return RES_INVALID_ARGUMENT;
 
     uint8_t status;
@@ -32,8 +39,7 @@ Result(read_KBC_output)(uint8_t port, uint8_t *output, uint8_t mouse) {
 
     while (attempts) {
         if (read_KBC_status(&status) != RES_OK) return RES_IO_ERROR;
-
-        if (!(status & BIT(0))) {
+        if (!OUTPUT_BUFFER_FULL(status)) {
             tickdelay(micros_to_ticks(20000));
             attempts--;
             continue;
@@ -41,44 +47,13 @@ Result(read_KBC_output)(uint8_t port, uint8_t *output, uint8_t mouse) {
 
         uint8_t temp_output;
         if (res_util_sys_inb(port, &temp_output) != RES_OK) return RES_IO_ERROR;
-
-        if (status & BIT(7) || status & BIT(6)) return RES_HARDWARE_ERROR;
-
-        if (!(status & BIT(0))) return RES_IO_ERROR;
-
+        if (PARITY_ERROR(status) || TIMEOUT_ERROR(status)) return RES_HARDWARE_ERROR;
         if (mouse && !(status & BIT(5))) return RES_IO_ERROR;
-
         if (!mouse && (status & BIT(5))) return RES_IO_ERROR;
 
         *output = temp_output;
         return RES_OK;
     }
 
-    return RES_TIMEOUT;
-}
-
-/**
- * @brief Writes a command byte to the keyboard controller.
- * @param port The port to write to (0x60 for data, 0x64 for command).
- * @param commandByte The command byte to write.
- * @return Result indicating success or specific error.
- */
-Result(write_KBC_command)(uint8_t port, uint8_t commandByte) {
-    uint8_t status;
-    uint8_t attempts = 10;
-
-    while (attempts) {
-        if (read_KBC_status(&status) != RES_OK) return RES_IO_ERROR;
-
-        if (status & BIT(1)) {
-            tickdelay(micros_to_ticks(20000));
-            attempts--;
-            continue;
-        }
-
-        if (sys_outb(port, commandByte) != RES_OK) return RES_IO_ERROR;
-
-        return RES_OK;
-    }
     return RES_TIMEOUT;
 }
