@@ -13,6 +13,8 @@
 #include "drivers/timer.h"
 #include "drivers/mouse.h"
 #include "drivers/kbc.h"
+#include "utils/character.h"
+#include "logic_tempname/logic_tempname.h"
 
 static uint8_t kbd_bit;
 static uint8_t timer_bit;
@@ -84,8 +86,22 @@ int(proj_main_loop)(int argc, char *argv[]) {
             
             if (irq_set & kbd_bit) {
                 uint16_t scancode;
+                Character character;
                 keyboard_ih(&scancode);
                 printf("scancode: %d\n", scancode);
+                /*if (!(scancode & BIT(7))) // checks if is a makecode
+                {
+                    scancode_to_character(scancode, &character);
+                    if (is_drawable(character))
+                    {
+                        printf("Drawable\n");
+                    }
+                    else printf("Not Drawable\n");
+                    
+                }*/
+                // else // checks if is a breakcode
+                
+                
                 if (scancode == BREAK_ESC) running = false;
             }
         }

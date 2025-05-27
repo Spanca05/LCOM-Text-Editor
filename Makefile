@@ -4,6 +4,7 @@ PROG=proj
 .PATH: ${.CURDIR}/src
 .PATH: ${.CURDIR}/src/utils
 .PATH: ${.CURDIR}/src/drivers
+.PATH: ${.CURDIR}/src/logic_tempname
 
 # source code files to be compiled
 SRCS = main.c \
@@ -12,7 +13,8 @@ SRCS = main.c \
 		keyboard.c \
 		mouse.c \
 		graphics.c \
-		utils.c 
+		utils.c \
+		logic_tempname.c
 
 # additional compilation flags
 # "-Wall -Wextra -Werror -I . -std=c11 -Wno-unused-parameter" are already set
