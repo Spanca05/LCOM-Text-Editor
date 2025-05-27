@@ -77,9 +77,11 @@ int(proj_main_loop)(int argc, char *argv[]) {
         if (is_ipc_notify(ipc_status) && _ENDPOINT_P(msg.m_source) == HARDWARE) {
             uint32_t irq_set = msg.m_notify.interrupts;
 
-            if (irq_set & BIT(timer_bit)) {}
+            if (irq_set & timer_bit) {
+                // Timer interrupt handling
+            }
 
-            if (irq_set & BIT(kbd_bit)) {
+            if (irq_set & kbd_bit) {
                 uint16_t scancode;
                 keyboard_ih(&scancode);
                 printf("%d", scancode);
@@ -96,6 +98,6 @@ int(proj_main_loop)(int argc, char *argv[]) {
 
 void render_screen() {
     // Clear screen to red
-    res_vg_draw_rectangle(0, 0, mode_info.XResolution, mode_info.YResolution, 0xFF0000);
+    res_vg_draw_rectangle(0, 0, mode_info.XResolution, mode_info.YResolution, 0xCCCCCC);
     // TODO: draw text buffer and cursor here using vg_draw_pixel or custom font routines
 }
