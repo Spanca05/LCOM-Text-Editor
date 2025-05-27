@@ -26,13 +26,13 @@ Result(keyboard_ih)(uint16_t *scancode);
  * @param bit_no Pointer to store the bit number of the interrupt.
  * @return Result indicating success or specific error.
  */
-Result(kbd_subscribe_int)(uint8_t *bit_no);
+Result(keyboard_subscribe_int)(uint8_t *bit_no);
 
 /**
  * @brief Unsubscribes from keyboard interrupts.
  * @return Result indicating success or specific error.
  */
-Result(kbd_unsubscribe_int)();
+Result(keyboard_unsubscribe_int)();
 
 /**
  * @brief Restores the keyboard controller to its default state.

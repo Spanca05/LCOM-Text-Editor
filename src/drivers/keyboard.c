@@ -42,7 +42,7 @@ Result(keyboard_ih)(uint16_t *scancode) {
     return RES_OK;
 }
 
-Result(kbd_subscribe_int)(uint8_t *bit_no) {
+Result(keyboard_subscribe_int)(uint8_t *bit_no) {
     if (bit_no == NULL) return RES_INVALID_ARGUMENT;
 
     *bit_no = BIT(keyboard_hook_id);
@@ -56,7 +56,7 @@ Result(kbd_subscribe_int)(uint8_t *bit_no) {
  * @brief Unsubscribes from keyboard interrupts.
  * @return Result indicating success or specific error.
  */
-Result(kbd_unsubscribe_int)() {
+Result(keyboard_unsubscribe_int)() {
     if (sys_irqrmpolicy(&keyboard_hook_id) != 0) return RES_PERMISSION_ERROR;
     return RES_OK;
 }

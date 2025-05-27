@@ -16,12 +16,8 @@
 #define TEXT_MODE     0x03
 
 static uint8_t kbd_bit;
-static int     kbd_hook = KEYBOARD_IRQ;
 static uint8_t timer_bit;
-static int     timer_hook = TIMER0_IRQ;
-static void   *video_mem  = NULL;
-
-extern uint16_t scancode; // from kbd.c
+static void   *video_mem = NULL;
 
 bool handle_keyboard(uint16_t scancode);
 void render_screen();
@@ -37,6 +33,12 @@ int main(int argc, char *argv[]) {
     return EXIT_SUCCESS;
 }
 
+void cleanup() {
+    timer_unsubscribe_int();
+    kbd_unsubscribe_int();
+    if (set_text_mode() != RES_OK) fprintf(stderr, "Failed to restore text mode\n");
+}
+
 int(proj_main_loop)(int argc, char *argv[]) {
     // Set graphics mode and map video memory
     if (set_graphic_mode(GRAPHICS_MODE) != RES_OK) {
@@ -49,16 +51,16 @@ int(proj_main_loop)(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    // Subscribe keyboard interrupts
-    if (kbd_subscribe_int(&kbd_bit) != RES_OK) {
-        fprintf(stderr, "Failed to subscribe keyboard\n");
+    // Subscribe timer interrupts
+    if (res_timer_subscribe_int(&timer_bit) != RES_OK) {
+        fprintf(stderr, "Failed to subscribe timer\n");
         cleanup();
         return EXIT_FAILURE;
     }
 
-    // Subscribe timer interrupts
-    if (res_timer_subscribe_int(&timer_bit) != RES_OK) {
-        fprintf(stderr, "Failed to subscribe timer\n");
+    // Subscribe keyboard interrupts
+    if (keyboard_subscribe_int(&kbd_bit) != RES_OK) {
+        fprintf(stderr, "Failed to subscribe keyboard\n");
         cleanup();
         return EXIT_FAILURE;
     }
@@ -73,17 +75,19 @@ int(proj_main_loop)(int argc, char *argv[]) {
         if (is_ipc_notify(ipc_status) && _ENDPOINT_P(msg.m_source) == HARDWARE) {
             uint32_t irq_set = msg.m_notify.interrupts;
 
-            if (irq_set & BIT(kbd_hook)) {
-                kbc_ih();
+            if (irq_set & BIT(timer_bit)) timer_int_handler();
+
+            if (irq_set & BIT(kbd_bit)) {
+                uint16_t scancode;
+                keyboard_ih(&scancode);
                 running = handle_keyboard(scancode);
                 render_screen();
             }
-            if (irq_set & BIT(timer_hook)) {
-                timer_int_handler();
-                render_screen();
-            }
         }
+
+        render_screen();
     }
+
 
     return RES_OK;
 }
@@ -99,10 +103,4 @@ void render_screen() {
     // Clear screen to light grey
     res_vg_draw_rectangle(0, 0, mode_info.XResolution, mode_info.YResolution, 0xCCCCCC);
     // TODO: draw text buffer and cursor here using vg_draw_pixel or custom font routines
-}
-
-void cleanup() {
-    timer_unsubscribe_int();
-    kbd_unsubscribe_int();
-    if (set_text_mode() != RES_OK) fprintf(stderr, "Failed to restore text mode\n");
 }
