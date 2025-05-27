@@ -1,9 +1,6 @@
-#include <lcom/lcf.h>
-
 #include "result.h"
+#include <lcom/lcf.h>
 #include <stdint.h>
-
-extern int sys_inb_count;
 
 Result(res_util_get_LSB)(uint16_t value, uint8_t *lsb) {
     if (lsb == NULL) return RES_INVALID_ARGUMENT;
