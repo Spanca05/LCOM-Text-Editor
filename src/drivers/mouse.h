@@ -5,7 +5,7 @@
 #include <lcom/lcf.h>
 
 
-Result(mouse_ih)(struct packet *mouse_packet);
+Result(res_mouse_ih)(struct packet *mouse_packet);
 
 /**
  * @brief Subscribes to mouse interrupts.

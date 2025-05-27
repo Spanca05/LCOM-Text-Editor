@@ -77,13 +77,13 @@ int(proj_main_loop)(int argc, char *argv[]) {
         if (is_ipc_notify(ipc_status) && _ENDPOINT_P(msg.m_source) == HARDWARE) {
             uint32_t irq_set = msg.m_notify.interrupts;
 
-            if (irq_set & BIT(timer_bit)) timer_int_handler();
+            if (irq_set & BIT(timer_bit)) {}
 
             if (irq_set & BIT(kbd_bit)) {
                 uint16_t scancode;
                 keyboard_ih(&scancode);
-                running = handle_keyboard(scancode);
-                render_screen();
+                printf("%d", scancode);
+                if (scancode == BREAK_ESC) running = false;
             }
         }
 
@@ -93,11 +93,6 @@ int(proj_main_loop)(int argc, char *argv[]) {
     // Cleanup and restore text mode
     cleanup();
     return RES_OK;
-}
-
-bool handle_keyboard(uint16_t scancode) {
-    // TODO: handle printable characters, backspace, arrow keys, etc.
-    return true;
 }
 
 void render_screen() {

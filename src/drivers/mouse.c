@@ -12,7 +12,7 @@ uint8_t current_byte = 0x00; // Current byte read from the mouse
 uint8_t byte_index   = 0;    // Index for assembling mouse packets
 uint8_t mouse_bytes[3];      // Buffer to store mouse packet bytes
 
-Result(mouse_ih)(struct packet *mouse_packet) {
+Result(res_mouse_ih)(struct packet *mouse_packet) {
     if (read_KBC_output(KBC_OUT_BUF, &current_byte, 1) != RES_OK) return RES_IO_ERROR;
     if (byte_index == 0 && !(current_byte & BIT(3))) return RES_ERROR;
 

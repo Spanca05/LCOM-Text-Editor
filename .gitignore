@@ -7,6 +7,7 @@
 # Compiled binary files
 *.out
 *.exe
+proj
 
 # Libraries
 *.lib
@@ -23,6 +24,7 @@
 # Minix-specific temporary files
 *.core
 *.swap
+*core*
 
 # Logs and temporary files
 *.log
