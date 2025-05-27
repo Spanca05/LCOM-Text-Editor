@@ -11,6 +11,8 @@
 #include "drivers/i8254.h"
 #include "drivers/keyboard.h"
 #include "drivers/timer.h"
+#include "drivers/mouse.h"
+#include "drivers/kbc.h"
 
 static uint8_t kbd_bit;
 static uint8_t timer_bit;
@@ -29,7 +31,7 @@ int main(int argc, char *argv[]) {
 void cleanup() {
     res_timer_unsubscribe_int();
     keyboard_unsubscribe_int();
-    if (set_text_mode() != RES_OK) fprintf(stderr, "Failed to restore text mode\n");
+    //if (set_text_mode() != RES_OK) fprintf(stderr, "Failed to restore text mode\n");
 }
 
 void setup_graphics() {
@@ -61,10 +63,11 @@ void subscribe_to_devices() {
         cleanup();
         exit(EXIT_FAILURE);
     }
+
 }
 
 int(proj_main_loop)(int argc, char *argv[]) {
-    setup_graphics();
+    //setup_graphics();
     subscribe_to_devices();
 
     bool    running = true;
@@ -76,23 +79,22 @@ int(proj_main_loop)(int argc, char *argv[]) {
         if (driver_receive(ANY, &msg, &ipc_status) != OK) continue;
         if (is_ipc_notify(ipc_status) && _ENDPOINT_P(msg.m_source) == HARDWARE) {
             uint32_t irq_set = msg.m_notify.interrupts;
-
-            if (irq_set & BIT(timer_bit)) {}
-
-            if (irq_set & BIT(kbd_bit)) {
+           
+            if (irq_set & timer_bit) {};
+            
+            if (irq_set & kbd_bit) {
                 uint16_t scancode;
                 keyboard_ih(&scancode);
-                printf("%d", scancode);
+                printf("scancode: %d\n", scancode);
                 if (scancode == BREAK_ESC) running = false;
             }
         }
-
-        render_screen();
+        //render_screen();
     }
 
     // Cleanup and restore text mode
     cleanup();
-    return RES_OK;
+    return 0;
 }
 
 void render_screen() {
