@@ -6,15 +6,18 @@
 #include <stdlib.h>
 
 #include "drivers/VBE.h"
+#include "drivers/backbuffer.h"
 #include "drivers/graphics.h"
 #include "drivers/i8042.h"
 #include "drivers/i8254.h"
 #include "drivers/keyboard.h"
 #include "drivers/timer.h"
+#include "text/text_renderer.h"
 
 static uint8_t kbd_bit;
 static uint8_t timer_bit;
-static void   *video_mem = NULL;
+static void   *video_mem   = NULL;
+static void   *back_buffer = NULL;
 
 bool handle_keyboard(uint16_t scancode);
 void render_screen();
@@ -27,21 +30,30 @@ int main(int argc, char *argv[]) {
 }
 
 void cleanup() {
-    res_timer_unsubscribe_int();
-    keyboard_unsubscribe_int();
+    if (timer_bit) res_timer_unsubscribe_int();
+    if (kbd_bit) keyboard_unsubscribe_int();
+    if (back_buffer) free_backbuffer(back_buffer);
     if (set_text_mode() != RES_OK) fprintf(stderr, "Failed to restore text mode\n");
 }
 
 void setup_graphics() {
-    // Set graphics mode and map video memory
+    // Set graphics mode
     if (set_graphic_mode(VBE_864P_DC) != RES_OK) {
         fprintf(stderr, "Failed to set graphics mode\n");
         cleanup();
         exit(EXIT_FAILURE);
     }
 
+    // Initialize graphics mode and map video memory
     if (res_vg_init(VBE_864P_DC, &video_mem) != RES_OK) {
         fprintf(stderr, "Failed to map video memory\n");
+        cleanup();
+        exit(EXIT_FAILURE);
+    }
+
+    // Initialize backbuffer (requires framebuffer size from res_vg_init)
+    if (init_backbuffer(&back_buffer) != RES_OK) {
+        fprintf(stderr, "Failed to initialize back buffer\n");
         cleanup();
         exit(EXIT_FAILURE);
     }
@@ -97,7 +109,15 @@ int(proj_main_loop)(int argc, char *argv[]) {
 }
 
 void render_screen() {
-    // Clear screen to red
-    res_vg_draw_rectangle(0, 0, mode_info.XResolution, mode_info.YResolution, 0xCCCCCC);
-    // TODO: draw text buffer and cursor here using vg_draw_pixel or custom font routines
+    // Draw into backbuffer
+    // Clear backbuffer to background color
+    memset(back_buffer, 0xCC, mode_info.XResolution * mode_info.YResolution * ((mode_info.BitsPerPixel + 7) / 8));
+
+    // Draw some text
+    // Temporarily map graphics.c drawing to backbuffer
+    // (swap video_mem pointer if supported) -- or draw directly to physical and then swap
+    draw_string(back_buffer, 50, 50, "Press ESC to exit", 0xFFFFFF);
+    draw_char(back_buffer, 50, 70, 'P', 0x00FF00);
+    // Swap backbuffer to front
+    swap_buffers(back_buffer);
 }
