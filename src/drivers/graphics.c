@@ -12,6 +12,7 @@ static void    *video_mem;
 static uint16_t h_res;
 static uint16_t v_res;
 static uint8_t  bits_per_pixel;
+static uint32_t fb_size = 0;
 
 Result(set_text_mode)() {
     reg86_t reg86;
@@ -48,16 +49,17 @@ Result(res_vg_init)(uint16_t mode, void **video_memory) {
     v_res          = mode_info.YResolution;
     bits_per_pixel = mode_info.BitsPerPixel;
 
-    phys_bytes   phys_addr        = mode_info.PhysBasePtr;
-    uint32_t framebuffer_size = mode_info.XResolution * mode_info.YResolution * (mode_info.BitsPerPixel / 8);
+    phys_bytes phys_addr = mode_info.PhysBasePtr;
+    /* compute and store framebuffer size directly */
+    fb_size              = mode_info.XResolution * mode_info.YResolution * (mode_info.BitsPerPixel / 8);
 
     struct minix_mem_range mr;
     mr.mr_base  = phys_addr;
-    mr.mr_limit = mr.mr_base + framebuffer_size - 1;
+    mr.mr_limit = mr.mr_base + fb_size - 1;
 
     if (sys_privctl(SELF, SYS_PRIV_ADD_MEM, &mr) != RES_OK) return RES_PERMISSION_ERROR;
 
-    void *mapped_mem = vm_map_phys(SELF, (void *)phys_addr, framebuffer_size);
+    void *mapped_mem = vm_map_phys(SELF, (void *)phys_addr, fb_size);
     if (mapped_mem == MAP_FAILED) return RES_MEMORY_ERROR;
 
     reg86_t reg86;
@@ -112,6 +114,9 @@ Result(res_vg_draw_rectangle)(uint16_t x, uint16_t y, uint16_t width, uint16_t h
     return RES_OK;
 }
 
-uint32_t get_framebuffer_size(void) {
-    return mode_info.XResolution * mode_info.YResolution * ((mode_info.BitsPerPixel + 7) / 8);
+Result(get_framebuffer_size)(uint32_t *size) {
+    if (size == NULL) return RES_INVALID_ARGUMENT;
+    if (fb_size == 0) return RES_UNINITIALIZED;
+    *size = fb_size;
+    return RES_OK;
 }
