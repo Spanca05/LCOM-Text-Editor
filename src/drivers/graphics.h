@@ -38,25 +38,28 @@ Result(res_normalize_color)(uint32_t *color);
 
 /**
  * @brief Draws a pixel at the specified coordinates.
+ * @param buf The buffer where the pixel will be written.
  * @param x The x-coordinate.
  * @param y The y-coordinate.
  * @param color The color of the pixel.
  * @return Result indicating success or specific error.
  */
-Result(res_vg_draw_pixel)(uint16_t x, uint16_t y, uint32_t color);
+Result(res_vg_draw_pixel)(void *buf, uint16_t x, uint16_t y, uint32_t color);
 
 /**
  * @brief Draws a horizontal line starting at the specified coordinates.
+ * @param buf The buffer where the line will be drawn.
  * @param x The starting x-coordinate.
  * @param y The y-coordinate.
  * @param len The length of the line.
  * @param color The color of the line.
  * @return Result indicating success or specific error.
  */
-Result(res_vg_draw_hline)(uint16_t x, uint16_t y, uint16_t len, uint32_t color);
+Result(res_vg_draw_hline)(void *buf, uint16_t x, uint16_t y, uint16_t len, uint32_t color);
 
 /**
  * @brief Draws a rectangle starting at the specified coordinates.
+ * @param buf The buffer where the rectangle will be drawn.
  * @param x The starting x-coordinate.
  * @param y The starting y-coordinate.
  * @param width The width of the rectangle.
@@ -64,12 +67,21 @@ Result(res_vg_draw_hline)(uint16_t x, uint16_t y, uint16_t len, uint32_t color);
  * @param color The color of the rectangle.
  * @return Result indicating success or specific error.
  */
-Result(res_vg_draw_rectangle)(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color);
+Result(res_vg_draw_rectangle)(void *buf, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color);
 
 /**
- * @brief Returns the size in bytes of the current video frame buffer.
- * @return Frame buffer size in bytes.
+ * @brief Retrieves the size in bytes of the current video frame buffer.
+ *
+ * This function calculates the size of the frame buffer based on the current
+ * video mode settings. It ensures that the size is initialized before returning
+ * the value.
+ *
+ * @param size Pointer to store the size of the frame buffer in bytes.
+ * @return Result indicating success or specific error.
+ *         - RES_OK: Successfully retrieved the frame buffer size.
+ *         - RES_INVALID_ARGUMENT: The provided pointer is NULL.
+ *         - RES_UNINITIALIZED: The frame buffer size has not been initialized.
  */
-uint32_t get_framebuffer_size(void);
+Result(get_framebuffer_size)(uint32_t *size);
 
 #endif

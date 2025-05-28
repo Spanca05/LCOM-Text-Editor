@@ -8,7 +8,7 @@
 vbe_mode_info_t mode_info;
 
 // Pointers and variables to store video memory and resolution details
-static void    *video_mem;
+void           *video_mem;
 static uint16_t h_res;
 static uint16_t v_res;
 static uint8_t  bits_per_pixel;
@@ -93,24 +93,24 @@ Result(res_normalize_color)(uint32_t *color) {
     return RES_OK;
 }
 
-Result(res_vg_draw_pixel)(uint16_t x, uint16_t y, uint32_t color) {
+Result(res_vg_draw_pixel)(void *buf, uint16_t x, uint16_t y, uint32_t color) {
     if (x >= h_res || y >= v_res) return RES_INVALID_ARGUMENT;
     uint8_t  bytes_per_pixel = (bits_per_pixel + 7) / 8;
     uint32_t index           = (y * h_res + x) * bytes_per_pixel;
     res_normalize_color(&color);
-    if (memcpy((uint8_t *)video_mem + index, &color, bytes_per_pixel) == NULL) return RES_MEMORY_ERROR;
+    if (memcpy((uint8_t *)buf + index, &color, bytes_per_pixel) == NULL) return RES_MEMORY_ERROR;
     return RES_OK;
 }
 
-Result(res_vg_draw_hline)(uint16_t x, uint16_t y, uint16_t len, uint32_t color) {
+Result(res_vg_draw_hline)(void *buf, uint16_t x, uint16_t y, uint16_t len, uint32_t color) {
     for (uint16_t i = 0; i < len; i++)
-        if (res_vg_draw_pixel(x + i, y, color) != RES_OK) return RES_IO_ERROR;
+        if (res_vg_draw_pixel(buf, x + i, y, color) != RES_OK) return RES_IO_ERROR;
     return RES_OK;
 }
 
-Result(res_vg_draw_rectangle)(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color) {
+Result(res_vg_draw_rectangle)(void *buf, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color) {
     for (uint16_t i = 0; i < height; i++)
-        if (res_vg_draw_hline(x, y + i, width, color) != RES_OK) return RES_IO_ERROR;
+        if (res_vg_draw_hline(buf, x, y + i, width, color) != RES_OK) return RES_IO_ERROR;
     return RES_OK;
 }
 
