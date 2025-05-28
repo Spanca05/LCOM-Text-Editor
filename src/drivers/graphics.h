@@ -66,4 +66,10 @@ Result(res_vg_draw_hline)(uint16_t x, uint16_t y, uint16_t len, uint32_t color);
  */
 Result(res_vg_draw_rectangle)(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color);
 
+/**
+ * @brief Returns the size in bytes of the current video frame buffer.
+ * @return Frame buffer size in bytes.
+ */
+uint32_t get_framebuffer_size(void);
+
 #endif

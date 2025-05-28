@@ -49,7 +49,7 @@ Result(res_vg_init)(uint16_t mode, void **video_memory) {
     bits_per_pixel = mode_info.BitsPerPixel;
 
     phys_bytes   phys_addr        = mode_info.PhysBasePtr;
-    unsigned int framebuffer_size = mode_info.XResolution * mode_info.YResolution * (mode_info.BitsPerPixel / 8);
+    uint32_t framebuffer_size = mode_info.XResolution * mode_info.YResolution * (mode_info.BitsPerPixel / 8);
 
     struct minix_mem_range mr;
     mr.mr_base  = phys_addr;
@@ -70,7 +70,7 @@ Result(res_vg_init)(uint16_t mode, void **video_memory) {
     if (sys_int86(&reg86) != RES_OK) return RES_HARDWARE_ERROR;
 
     *video_memory = mapped_mem;
-    video_mem     = mapped_mem; // Linha benção que fez retângulo desenhar
+    video_mem     = mapped_mem; // Linha bênção que fez retângulo desenhar
     return RES_OK;
 }
 
@@ -110,4 +110,8 @@ Result(res_vg_draw_rectangle)(uint16_t x, uint16_t y, uint16_t width, uint16_t h
     for (uint16_t i = 0; i < height; i++)
         if (res_vg_draw_hline(x, y + i, width, color) != RES_OK) return RES_IO_ERROR;
     return RES_OK;
+}
+
+uint32_t get_framebuffer_size(void) {
+    return mode_info.XResolution * mode_info.YResolution * ((mode_info.BitsPerPixel + 7) / 8);
 }
