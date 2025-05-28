@@ -74,7 +74,7 @@ void subscribe_to_devices() {
 }
 
 void setup_variables() {
-    cursor = malloc(sizeof(Cursor));
+    cursor       = malloc(sizeof(Cursor));
     kbd_modifier = malloc(sizeof(KBD_modifier));
     if (!cursor || !kbd_modifier) {
         fprintf(stderr, "Failed to allocate memory for cursor or kbd_modifier\n");
@@ -90,10 +90,13 @@ void setup_variables() {
     kbd_modifier->shift     = false;
 }
 
-//Just to test stuff
+// Just to test stuff
 void print_variables(Cursor cursor_, KBD_modifier kbd_modifier_) {
-    printf("Cursor: cx=%d, cy=%d, vis:%d\n",cursor_.cx,cursor_.cy,cursor_.visible);
-    printf("kbd_m: caps=%d, crtl=%d, la=%d, ra=%d, shift=%d\n",kbd_modifier_.caps_lock,kbd_modifier_.ctrl,kbd_modifier_.lalt,kbd_modifier_.ralt,kbd_modifier_.shift);
+    printf("Cursor: cx=%d, cy=%d, vis:%d\n", cursor_.cx, cursor_.cy, cursor_.visible);
+    printf(
+        "kbd_m: caps=%d, crtl=%d, la=%d, ra=%d, shift=%d\n", kbd_modifier_.caps_lock, kbd_modifier_.ctrl,
+        kbd_modifier_.lalt, kbd_modifier_.ralt, kbd_modifier_.shift
+    );
 }
 
 int(proj_main_loop)(int argc, char *argv[]) {
@@ -118,16 +121,17 @@ int(proj_main_loop)(int argc, char *argv[]) {
                 if (keyboard_ih(&scancode) != RES_OK) continue; // needs to be changed
 
                 printf("scancode: %d\n", scancode);
-                if (!(scancode & BIT(7)))                       // checks if is a makecode
+                if (!(scancode & BIT(7)))                       // makecode part
                 {
                     if (scancode_to_character(scancode, &character) != RES_OK) printf("Couldn't convert scancode!\n");
                     if (character_handler(&character, cursor, kbd_modifier) != RES_OK) printf("Something wrong!\n");
                     print_variables(*cursor, *kbd_modifier);
-                }
-                else 
+                } else // breakcode part
                 {
-                    if (scancode_to_character(scancode - 128, &character) != RES_OK) printf("Couldn't convert scancode!\n");
-                    if (release_handler(&character, cursor, kbd_modifier, &running) != RES_OK) printf("Something wrong or other character!\n");
+                    if (scancode_to_character(scancode - 128, &character) != RES_OK)
+                        printf("Couldn't convert scancode!\n");
+                    if (release_handler(&character, cursor, kbd_modifier, &running) != RES_OK)
+                        printf("Something wrong!\n");
                     print_variables(*cursor, *kbd_modifier);
                 }
             }

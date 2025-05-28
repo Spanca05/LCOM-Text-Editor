@@ -1,7 +1,8 @@
 #include "logic_tempname.h"
 
 int esc_counter = 0;
-//values just to test the update_cursor, these should be defined with the graphics part
+
+// values just to test the update_cursor, these should be defined with the graphics part
 int min_y = 0;
 int min_x = 0;
 int max_y = 64;
@@ -333,22 +334,21 @@ Result(update_cursor)(Cursor *cursor, Character character) {
 
     if (cursor->cy < min_y) cursor->cy = min_y;
     else if (cursor->cy > max_y) cursor->cy = max_y;
-    
+
     else if (cursor->cx < min_x) {
         if (cursor->cy == min_y) cursor->cx = min_x;
         else {
             cursor->cx = max_x;
             cursor->cy--;
         }
-    }
-    else if (cursor->cx > max_x) {
+    } else if (cursor->cx > max_x) {
         if (cursor->cy == max_y) cursor->cx = max_x;
         else {
             cursor->cx = min_x;
             cursor->cy++;
         }
     }
-    
+
     return RES_OK;
 }
 
@@ -356,13 +356,15 @@ Result(press_kbd_modifier)(KBD_modifier *kbd_modifier, Character character) {
     if (kbd_modifier == NULL) return RES_INVALID_ARGUMENT;
 
     switch (character) {
-    case CHAR_CAPSLOCK: kbd_modifier->caps_lock = !kbd_modifier->caps_lock; break;
-    case CHAR_LSHIFT  :
-    case CHAR_RSHIFT  : kbd_modifier->shift = true; break;
-    case CHAR_LCTRL   :
-    case CHAR_RCTRL   : kbd_modifier->ctrl = true; break;
-    case CHAR_LALT    : kbd_modifier->ralt = true; break;
-    case CHAR_RALT    : kbd_modifier->ralt = true; break;
+    case CHAR_CAPSLOCK:
+        kbd_modifier->caps_lock = !kbd_modifier->caps_lock;
+        break; // If you keep the shift pressed it keep flipping is value, should be constant
+    case CHAR_LSHIFT:
+    case CHAR_RSHIFT: kbd_modifier->shift = true; break;
+    case CHAR_LCTRL :
+    case CHAR_RCTRL : kbd_modifier->ctrl = true; break;
+    case CHAR_LALT  : kbd_modifier->ralt = true; break;
+    case CHAR_RALT  : kbd_modifier->ralt = true; break;
 
     default: return RES_INVALID_ARGUMENT;
     }
@@ -376,19 +378,16 @@ Result(release_handler)(Character *character, Cursor *cursor, KBD_modifier *kbd_
     if (*character == CHAR_ESC) {
         printf("ESC was released");
         if (esc_counter == 0) esc_counter++;
-        
+
         else if (esc_counter == 1) *running = false;
-    }
-
-    else if (is_kbd_modifier(*character)) {
+    } else if (is_kbd_modifier(*character)) {
         printf("This is a release kbd_modifier\n");
+        esc_counter--;
         release_kbd_modifier(kbd_modifier, *character);
-    }
-
-    else esc_counter--;
+    } else esc_counter--;
 
     if (esc_counter < 0) esc_counter = 0;
-    
+
     return RES_OK;
 }
 
