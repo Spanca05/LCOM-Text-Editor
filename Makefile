@@ -4,6 +4,7 @@ PROG=proj
 .PATH: ${.CURDIR}/src
 .PATH: ${.CURDIR}/src/utils
 .PATH: ${.CURDIR}/src/drivers
+.PATH: ${.CURDIR}/src/text 
 
 # source code files to be compiled
 SRCS = main.c \
