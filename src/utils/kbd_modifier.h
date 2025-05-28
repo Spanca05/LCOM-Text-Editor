@@ -1,5 +1,5 @@
-#ifndef KBD_MODIFIERS_H
-#define KBD_MODIFIERS_H
+#ifndef KBD_MODIFIER_H
+#define KBD_MODIFIER_H
 
 #include <stdbool.h>
 
@@ -15,6 +15,6 @@ typedef struct {
     // bool num_lock;      // Num Lock
     // bool lgui;       // Left GUI (Windows/Command)
     // bool rgui;       // Right GUI (Windows/Command)
-} Kbd_modifiers;
+} KBD_modifier;
 
 #endif
