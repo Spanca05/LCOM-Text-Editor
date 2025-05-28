@@ -15,12 +15,13 @@
  *
  * Renders the given ASCII character using the 8x16 font bitmap.
  *
+ * @param buf The buffer to render the character into.
  * @param x The X (horizontal) pixel coordinate of the character's top-left.
  * @param y The Y (vertical) pixel coordinate of the character's top-left.
  * @param c The ASCII character to draw.
  * @param color The direct-color value to use when drawing the character.
  */
-void draw_char(uint16_t x, uint16_t y, char c, uint32_t color);
+void draw_char(void *buf, uint16_t x, uint16_t y, char c, uint32_t color);
 
 /**
  * @brief Draw a null-terminated string at a specific screen coordinate.
@@ -28,11 +29,12 @@ void draw_char(uint16_t x, uint16_t y, char c, uint32_t color);
  * Renders each character in the provided string sequentially using
  * the 8x16 font bitmap.
  *
+ * @param buf The buffer to render the string into.
  * @param x The starting X (horizontal) pixel coordinate for the string.
  * @param y The starting Y (vertical) pixel coordinate for the string.
  * @param s The null-terminated string to draw.
  * @param color The direct-color value to use when drawing the text.
  */
-void draw_string(uint16_t x, uint16_t y, const char *s, uint32_t color);
+void draw_string(void *buf, uint16_t x, uint16_t y, const char *s, uint32_t color);
 
 #endif // TEXT_RENDERER_H
