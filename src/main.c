@@ -13,6 +13,7 @@
 #include "drivers/i8254.h"
 #include "drivers/keyboard.h"
 #include "drivers/timer.h"
+#include "graphics/font8x16.h"
 #include "graphics/text_renderer.h"
 
 static uint8_t kbd_bit;
@@ -120,20 +121,42 @@ int(proj_main_loop)(int argc, char *argv[]) {
     return RES_OK;
 }
 
+// Render the window header (title bar)
+static void render_header(void *buf, uint16_t header_height) {
+    uint32_t header_bg = 0x333333;
+    // Background
+    res_vg_draw_rectangle(buf, 0, 0, mode_info.XResolution, header_height, header_bg);
+    // Text "File" on left, 'X' on right
+    uint16_t text_y = (header_height - FONT_HEIGHT) / 2;
+    draw_string(buf, 5, text_y, "File", 0xFFFFFF);
+    draw_char(buf, mode_info.XResolution - FONT_WIDTH - 5, text_y, 'X', 0xFF0000);
+}
+
+// Render the window footer
+static void render_footer(void *buf, uint16_t header_height) {
+    uint32_t footer_bg = 0x333333;
+    res_vg_draw_rectangle(
+        buf, 0, mode_info.YResolution - header_height, mode_info.XResolution, header_height, footer_bg
+    );
+}
+
 void render_screen() {
-    // Clear screen to grey in back buffer
+    // Clear screen to grey
     res_vg_draw_rectangle(back_buffer, 0, 0, mode_info.XResolution, mode_info.YResolution, 0xCCCCCC);
 
-    // draw text buffer contents
-    text_buffer_render(&tb, back_buffer);
+    // Header and footer heights
+    uint16_t header_height = FONT_HEIGHT + 4;
 
-    // Draw some text
-    draw_string(back_buffer, 50, 50, "Press ESC to exit", 0xFFFFFF);
-    draw_char(back_buffer, 50, 70, 'P', 0x00FF00);
+    // Draw header and footer
+    render_header(back_buffer, header_height);
+    render_footer(back_buffer, header_height);
+
+    // Draw text buffer contents below header
+    text_buffer_render(&tb, back_buffer, header_height);
 
     // TODO: draw cursor here
 
-    // Copy back buffer to video memory
+    // Swap buffers
     swap_buffers(back_buffer);
 }
 
