@@ -4,7 +4,9 @@ PROG=proj
 .PATH: ${.CURDIR}/src
 .PATH: ${.CURDIR}/src/utils
 .PATH: ${.CURDIR}/src/drivers
-.PATH: ${.CURDIR}/src/text 
+.PATH: ${.CURDIR}/src/graphics
+.PATH: ${.CURDIR}/src/buffer
+ 
 
 # source code files to be compiled
 SRCS = main.c \
@@ -16,7 +18,8 @@ SRCS = main.c \
 		utils.c \
 		font8x16.c \
 		text_renderer.c \
-		backbuffer.c
+		backbuffer.c \
+		text_buffer.c
 
 # additional compilation flags
 # "-Wall -Wextra -Werror -I . -std=c11 -Wno-unused-parameter" are already set
