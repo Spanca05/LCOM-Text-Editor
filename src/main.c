@@ -20,6 +20,8 @@ static uint8_t timer_bit;
 static void   *video_mem   = NULL;
 static void   *back_buffer = NULL;
 
+static TextBuffer tb;  // persistent text buffer
+
 bool handle_keyboard(uint16_t scancode);
 void render_screen(void);
 void test_text_buffer(void);
@@ -79,8 +81,15 @@ int(proj_main_loop)(int argc, char *argv[]) {
     setup_graphics();
     subscribe_to_devices();
 
-    bool    running = true;
-    int     ipc_status;
+    // Initialize text buffer
+    if (text_buffer_init(&tb) != RES_OK) {
+        fprintf(stderr, "Failed to init text buffer\n");
+        cleanup();
+        return EXIT_FAILURE;
+    }
+
+    bool running = true;
+    int ipc_status;
     message msg;
 
     // Main event loop
@@ -90,18 +99,19 @@ int(proj_main_loop)(int argc, char *argv[]) {
             uint32_t irq_set = msg.m_notify.interrupts;
 
             if (irq_set & timer_bit) {
-                // Timer interrupt handling
-
-
-                // Test the text buffer functionality
-                test_text_buffer();
+                // Timer interrupt: toggle cursor blink flag (optional)
             }
 
             if (irq_set & kbd_bit) {
                 uint16_t scancode;
                 keyboard_ih(&scancode);
-                printf("%d", scancode);
-                if (scancode == BREAK_ESC) running = false;
+                if (scancode == BREAK_ESC) {
+                    running = false;
+                } else {
+                    // insert character into buffer or handle arrows
+                    // TODO Add scancode to char logic
+                    text_buffer_insert_char(&tb, (char)scancode);
+                }
             }
         }
         render_screen();
@@ -116,11 +126,14 @@ void render_screen() {
     // Clear screen to grey in back buffer
     res_vg_draw_rectangle(back_buffer, 0, 0, mode_info.XResolution, mode_info.YResolution, 0xCCCCCC);
 
+    // draw text buffer contents
+    text_buffer_render(&tb, back_buffer);
+
     // Draw some text
     draw_string(back_buffer, 50, 50, "Press ESC to exit", 0xFFFFFF);
     draw_char(back_buffer, 50, 70, 'P', 0x00FF00);
 
-    // TODO: draw text buffer and cursor here
+    // TODO: draw cursor here
 
     // Copy back buffer to video memory
     swap_buffers(back_buffer);
