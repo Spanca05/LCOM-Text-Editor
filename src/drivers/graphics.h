@@ -84,4 +84,9 @@ Result(res_vg_draw_rectangle)(void *buf, uint16_t x, uint16_t y, uint16_t width,
  */
 Result(get_framebuffer_size)(uint32_t *size);
 
+/**
+ * @brief Global pointer to the mapped video memory.
+ */
+extern void *video_mem;
+
 #endif
