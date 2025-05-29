@@ -10,8 +10,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define MAX_ROWS 25
-#define MAX_COLS 80
+#define MAX_ROWS 54
+#define MAX_COLS 160
 
 /**
  * @brief Represents the text buffer and its state.
