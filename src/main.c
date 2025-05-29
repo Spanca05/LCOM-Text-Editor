@@ -12,7 +12,7 @@
 #include "drivers/i8254.h"
 #include "drivers/keyboard.h"
 #include "drivers/timer.h"
-#include "text/text_renderer.h"
+#include "graphics/text_renderer.h"
 
 static uint8_t kbd_bit;
 static uint8_t timer_bit;
