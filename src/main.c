@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "buffer/text_buffer.h"
 #include "drivers/VBE.h"
 #include "drivers/backbuffer.h"
 #include "drivers/graphics.h"
@@ -20,7 +21,8 @@ static void   *video_mem   = NULL;
 static void   *back_buffer = NULL;
 
 bool handle_keyboard(uint16_t scancode);
-void render_screen();
+void render_screen(void);
+void test_text_buffer(void);
 
 int main(int argc, char *argv[]) {
     // Initialize LCF and Minix framework
@@ -30,28 +32,26 @@ int main(int argc, char *argv[]) {
 }
 
 void cleanup() {
-    if (timer_bit) res_timer_unsubscribe_int();
-    if (kbd_bit) keyboard_unsubscribe_int();
-    if (back_buffer) free_backbuffer(back_buffer);
+    res_timer_unsubscribe_int();
+    keyboard_unsubscribe_int();
     if (set_text_mode() != RES_OK) fprintf(stderr, "Failed to restore text mode\n");
 }
 
 void setup_graphics() {
-    // Set graphics mode
+    // Set graphics mode and map video memory
     if (set_graphic_mode(VBE_864P_DC) != RES_OK) {
         fprintf(stderr, "Failed to set graphics mode\n");
         cleanup();
         exit(EXIT_FAILURE);
     }
 
-    // Initialize graphics mode and map video memory
     if (res_vg_init(VBE_864P_DC, &video_mem) != RES_OK) {
         fprintf(stderr, "Failed to map video memory\n");
         cleanup();
         exit(EXIT_FAILURE);
     }
 
-    // Initialize backbuffer (requires framebuffer size from res_vg_init)
+    // Initialize back buffer
     if (init_backbuffer(&back_buffer) != RES_OK) {
         fprintf(stderr, "Failed to initialize back buffer\n");
         cleanup();
@@ -91,6 +91,10 @@ int(proj_main_loop)(int argc, char *argv[]) {
 
             if (irq_set & timer_bit) {
                 // Timer interrupt handling
+
+
+                // Test the text buffer functionality
+                test_text_buffer();
             }
 
             if (irq_set & kbd_bit) {
@@ -109,15 +113,40 @@ int(proj_main_loop)(int argc, char *argv[]) {
 }
 
 void render_screen() {
-    // Draw into backbuffer
-    // Clear backbuffer to background color
-    memset(back_buffer, 0xCC, mode_info.XResolution * mode_info.YResolution * ((mode_info.BitsPerPixel + 7) / 8));
+    // Clear screen to grey in back buffer
+    res_vg_draw_rectangle(back_buffer, 0, 0, mode_info.XResolution, mode_info.YResolution, 0xCCCCCC);
 
     // Draw some text
-    // Temporarily map graphics.c drawing to backbuffer
-    // (swap video_mem pointer if supported) -- or draw directly to physical and then swap
     draw_string(back_buffer, 50, 50, "Press ESC to exit", 0xFFFFFF);
     draw_char(back_buffer, 50, 70, 'P', 0x00FF00);
-    // Swap backbuffer to front
+
+    // TODO: draw text buffer and cursor here
+
+    // Copy back buffer to video memory
     swap_buffers(back_buffer);
+}
+
+void test_text_buffer() {
+    TextBuffer tb;
+
+    // Initialize the text buffer
+    if (text_buffer_init(&tb) != RES_OK) {
+        printf("Failed to initialize text buffer\n");
+        return;
+    }
+
+    // Insert a character at (0, 0)
+    text_buffer_insert_char(&tb, 'A');
+    printf("Buffer after inserting 'A' at (0, 0):\n");
+    for (int row = 0; row < MAX_ROWS; row++) {
+        for (int col = 0; col < MAX_COLS; col++) { putchar(tb.buffer[row][col]); }
+        putchar('\n');
+    }
+
+    // Move the cursor to (5, 10)
+    if (text_buffer_move_cursor(&tb, 5, 10) != RES_OK) {
+        printf("Failed to move cursor\n");
+        return;
+    }
+    printf("Cursor moved to row %d, col %d\n", tb.cursor_row, tb.cursor_col);
 }
