@@ -13,7 +13,7 @@
 
 Result(scancode_to_character)(uint16_t scancode, Character *character);
 
-Result(character_handler)(Character *character, Cursor *cursor, KBD_modifier *kbd_modifier);
+Result(character_handler)(char *buffer, int buffer_size, Character *character, Cursor *cursor, KBD_modifier *kbd_modifier);
 Result(release_handler)(Character *character, Cursor *cursor, KBD_modifier *kbd_modifier, bool *running);
 
 bool is_drawable(Character character);
@@ -25,11 +25,14 @@ bool (has_ralt) (Character character);
 
 Result(modify_character)(KBD_modifier kbd_modifier, Character *character);
 
-Result(insert_into_buffer)(char *buffer, Character character);
+Result(insert_into_buffer)(char *buffer,int buffer_size, int *pos, Character character);
 Result(delete_from_buffer)(char *buffer, int pos);
+Result(insert_spaces)(char *buffer, int buffer_size, int pos, Character character);
 
 Result(update_cursor)(Cursor *cursor, Character character);
 Result(press_kbd_modifier)(KBD_modifier *kbd_modifier, Character character);
 Result(release_kbd_modifier)(KBD_modifier *kbd_modifier, Character character);
+
+Result(character_size)(char const *char_, int *len);
 
 #endif

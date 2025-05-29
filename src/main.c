@@ -23,6 +23,8 @@ static uint8_t timer_bit;
 static void   *video_mem = NULL;
 Cursor        *cursor;
 KBD_modifier  *kbd_modifier;
+const int      buffer_size = 1024;
+char          *buffer;
 
 bool handle_keyboard(uint16_t scancode);
 void render_screen();
@@ -74,6 +76,8 @@ void subscribe_to_devices() {
 }
 
 void setup_variables() {
+    buffer       = malloc(1024);
+    *buffer      = '#';
     cursor       = malloc(sizeof(Cursor));
     kbd_modifier = malloc(sizeof(KBD_modifier));
     if (!cursor || !kbd_modifier) {
@@ -107,6 +111,7 @@ int(proj_main_loop)(int argc, char *argv[]) {
     int     ipc_status;
     message msg;
 
+    printf("%s\n",buffer);
     // Main event loop
     while (running) {
         if (driver_receive(ANY, &msg, &ipc_status) != OK) continue;
@@ -120,19 +125,17 @@ int(proj_main_loop)(int argc, char *argv[]) {
                 Character character;
                 if (keyboard_ih(&scancode) != RES_OK) continue; // needs to be changed
 
-                printf("scancode: %d\n", scancode);
                 if (!(scancode & BIT(7)))                       // makecode part
                 {
                     if (scancode_to_character(scancode, &character) != RES_OK) printf("Couldn't convert scancode!\n");
-                    if (character_handler(&character, cursor, kbd_modifier) != RES_OK) printf("Something wrong!\n");
-                    print_variables(*cursor, *kbd_modifier);
+                    if (character_handler(buffer, buffer_size, &character, cursor, kbd_modifier) != RES_OK)
+                        printf("Something wrong!\n");
                 } else // breakcode part
                 {
                     if (scancode_to_character(scancode - 128, &character) != RES_OK)
                         printf("Couldn't convert scancode!\n");
                     if (release_handler(&character, cursor, kbd_modifier, &running) != RES_OK)
                         printf("Something wrong!\n");
-                    print_variables(*cursor, *kbd_modifier);
                 }
             }
         }

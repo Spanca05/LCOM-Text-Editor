@@ -391,4 +391,5 @@ static const Character ralt_character_map[] = {
     [CHAR_ACUTE] = CHAR_RBRACKET, // '´' -> ']'
 };
 
+
 #endif

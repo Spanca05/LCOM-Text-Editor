@@ -8,6 +8,9 @@ int min_x = 0;
 int max_y = 64;
 int max_x = 64;
 
+//just to test buffer logic
+int buffer_count = 1;
+
 Result(scancode_to_character)(uint16_t scancode, Character *character) {
     if (character == NULL) return RES_INVALID_ARGUMENT;
 
@@ -198,7 +201,7 @@ Result(scancode_to_character)(uint16_t scancode, Character *character) {
     return RES_OK;
 }
 
-Result(character_handler)(Character *character, Cursor *cursor, KBD_modifier *kbd_modifier) {
+Result(character_handler)(char *buffer, int buffer_size, Character *character, Cursor *cursor, KBD_modifier *kbd_modifier) {
     if (character == NULL) return RES_INVALID_ARGUMENT;
 
     if (*character == CHAR_ESC) {
@@ -212,7 +215,8 @@ Result(character_handler)(Character *character, Cursor *cursor, KBD_modifier *kb
             || (has_shift(*character) && (kbd_modifier->shift || kbd_modifier->caps_lock)))
             modify_character(*kbd_modifier, character);
 
-        printf("This %s is drawble\n", (char *)character_to_char_map[*character]);
+        insert_into_buffer(buffer, buffer_size, &buffer_count, *character);
+        printf("Buffer: %s\nChar: %s\n",buffer,(char *)character_to_char_map[*character]);
     }
 
     else if (is_arrow(*character)) {
@@ -369,15 +373,18 @@ Result(modify_character)(KBD_modifier kbd_modifier, Character *character) {
 }
 
 // Not a good inmplementation, because only allows ASCII, instead of UTF-8
-Result(insert_into_buffer)(char *buffer, Character character) {
-    if (buffer == NULL || !is_drawable(character)) return RES_INVALID_ARGUMENT;
+Result(insert_into_buffer)(char *buffer, int buffer_size, int *pos, Character character) {
+    if (buffer == NULL || *pos < 0 || *pos > buffer_size) return RES_INVALID_ARGUMENT;
 
+    int char_size = 1;
+    size_t len = strlen(buffer);
     char const *c = character_to_char_map[character];
 
-    // Insert the character at the end of the buffer
-    size_t len      = strlen(buffer);
-    buffer[len]     = *c;
-    buffer[len + 1] = '\0';
+    if (character_size(c, &char_size) != RES_OK) return RES_ERROR;
+    
+    memmove(buffer + *pos + char_size, buffer + *pos, len - *pos + 1);
+    memcpy(buffer + *pos, c, char_size);
+    *pos += char_size;
 
     return RES_OK;
 }
@@ -468,6 +475,18 @@ Result(release_kbd_modifier)(KBD_modifier *kbd_modifier, Character character) {
 
     default: return RES_INVALID_ARGUMENT;
     }
+
+    return RES_OK;
+}
+
+Result(character_size)(char const *char_, int *len) { //The number of bytes correspondes to the bytes that the Character occupies (All because of UTF-8 characters...)
+    if (char_ == NULL || len == NULL) return RES_INVALID_ARGUMENT;
+    
+    unsigned char c = *char_;
+    if ((c & 0xE0) == 0xC0) *len = 2; // 2 bytes
+    else if ((c & 0xF0) == 0xE0) *len = 3; // 3 bytes
+    else if ((c & 0xF8) == 0xF0) *len = 4; // 4 bytes
+    else *len = 1;
 
     return RES_OK;
 }
