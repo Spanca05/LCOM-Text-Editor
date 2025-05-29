@@ -9,6 +9,7 @@ typedef enum {
     RES_ERROR,
 
     // Specific errors
+    RES_UNIMPLEMENTED,    // Feature or functionality is not implemented
     RES_INVALID_ARGUMENT, // Invalid argument passed to a function
     RES_IO_ERROR,         // Input/output operation failed
     RES_MEMORY_ERROR,     // Memory allocation or mapping failed

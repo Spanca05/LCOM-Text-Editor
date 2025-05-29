@@ -17,6 +17,7 @@
 #include "utils/character.h"
 #include "utils/cursor-rato.h"
 #include "utils/kbd_modifier.h"
+#include "utils/key.h"
 
 static uint8_t kbd_bit;
 static uint8_t timer_bit;
@@ -111,7 +112,6 @@ int(proj_main_loop)(int argc, char *argv[]) {
     int     ipc_status;
     message msg;
 
-    printf("%s\n",buffer);
     // Main event loop
     while (running) {
         if (driver_receive(ANY, &msg, &ipc_status) != OK) continue;
@@ -121,22 +121,23 @@ int(proj_main_loop)(int argc, char *argv[]) {
             if (irq_set & timer_bit) {};
 
             if (irq_set & kbd_bit) {
-                uint16_t  scancode;
-                Character character;
-                if (keyboard_ih(&scancode) != RES_OK) continue; // needs to be changed
+                Result   result;
+                uint16_t scancode;
+                Key      key;
+                bool     isPressCode;
 
-                if (!(scancode & BIT(7)))                       // makecode part
-                {
-                    if (scancode_to_character(scancode, &character) != RES_OK) printf("Couldn't convert scancode!\n");
-                    if (character_handler(buffer, buffer_size, &character, cursor, kbd_modifier) != RES_OK)
-                        printf("Something wrong!\n");
-                } else // breakcode part
-                {
-                    if (scancode_to_character(scancode - 128, &character) != RES_OK)
-                        printf("Couldn't convert scancode!\n");
-                    if (release_handler(&character, cursor, kbd_modifier, &running) != RES_OK)
-                        printf("Something wrong!\n");
-                }
+                // Handle the keyboard and get the scancode
+                result = keyboard_ih(&scancode);
+                if (result != RES_OK) continue;
+
+                // Convert the scan code into a Key
+                result = scancode_to_key(scancode, &key, &isPressCode);
+                if (result == RES_UNIMPLEMENTED) printf("Unimplemented: 0x%X\n", scancode);
+                if (result != RES_OK) continue;
+
+                // Print key name
+                if (isPressCode) printf("Pressed:  %s\n", key_names[key]);
+                else printf("Released: %s\n", key_names[key]);
             }
         }
         // render_screen();

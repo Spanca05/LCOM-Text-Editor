@@ -14,11 +14,12 @@ SRCS = main.c \
 		mouse.c \
 		graphics.c \
 		utils.c \
+		key.c \
 		logic_tempname.c
 
 # additional compilation flags
 # "-Wall -Wextra -Werror -I . -std=c11 -Wno-unused-parameter" are already set
-CFLAGS += -pedantic -O3
+CFLAGS += -pedantic -O3 -march=native -mtune=native
 
 # list of library dependencies
 DPADD += ${LIBLCF}
