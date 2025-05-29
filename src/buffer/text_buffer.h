@@ -70,14 +70,16 @@ Result(text_buffer_delete_char)(TextBuffer *tb);
 Result(text_buffer_move_cursor)(TextBuffer *tb, uint16_t row, uint16_t col);
 
 /**
- * @brief Renders the contents of the text buffer to the screen.
+ * @brief Renders the contents of the text buffer to the screen at a vertical offset.
  *
- * Draws each character at its appropriate screen position using draw_char.
+ * Draws each character at its appropriate screen position using draw_char,
+ * starting at pixel y = y_offset, and stops before the footer area.
  *
  * @param tb Pointer to the TextBuffer.
  * @param buf Graphics buffer (back buffer) pointer.
+ * @param y_offset Vertical pixel offset to start drawing.
  * @return RES_OK on success, or an error code.
  */
-Result(text_buffer_render)(const TextBuffer *tb, void *buf);
+Result(text_buffer_render)(const TextBuffer *tb, void *buf, uint16_t y_offset);
 
 #endif // TEXT_BUFFER_H
