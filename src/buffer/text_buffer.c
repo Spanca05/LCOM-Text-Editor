@@ -77,13 +77,20 @@ Result(text_buffer_move_cursor)(TextBuffer *tb, uint16_t row, uint16_t col) {
     return RES_OK;
 }
 
-Result(text_buffer_render)(const TextBuffer *tb, void *buf) {
+Result(text_buffer_render)(const TextBuffer *tb, void *buf, uint16_t y_offset) {
     if (tb == NULL || buf == NULL) return RES_INVALID_ARGUMENT;
 
-    // Draw each character in the buffer
-    for (int row = 0; row < MAX_ROWS; row++) {
-        for (int col = 0; col < MAX_COLS; col++) {
-            draw_char(buf, col * FONT_WIDTH, row * FONT_HEIGHT, tb->buffer[row][col], 0xFFFFFF);
+    // Compute available drawing area between header and footer
+    uint16_t total_height     = mode_info.YResolution;
+    uint16_t available_pixels = (total_height > 2 * y_offset) ? (total_height - 2 * y_offset) : 0;
+    uint16_t max_rows_draw    = available_pixels / FONT_HEIGHT;
+
+    // Draw each character in the buffer within the drawing area
+    for (uint16_t row = 0; row < MAX_ROWS && row < max_rows_draw; row++) {
+        for (uint16_t col = 0; col < MAX_COLS; col++) {
+            uint16_t x = col * FONT_WIDTH;
+            uint16_t y = y_offset + row * FONT_HEIGHT;
+            draw_char(buf, x, y, tb->buffer[row][col], 0xFFFFFF);
         }
     }
     return RES_OK;
