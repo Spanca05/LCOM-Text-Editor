@@ -135,9 +135,14 @@ static void render_header(void *buf, uint16_t header_height) {
 // Render the window footer
 static void render_footer(void *buf, uint16_t header_height) {
     uint32_t footer_bg = 0x333333;
-    res_vg_draw_rectangle(
-        buf, 0, mode_info.YResolution - header_height, mode_info.XResolution, header_height, footer_bg
-    );
+    uint16_t y0        = mode_info.YResolution - header_height;
+    res_vg_draw_rectangle(buf, 0, y0, mode_info.XResolution, header_height, footer_bg);
+
+    // Draw cursor position (Ln, Col) on the left side
+    char pos_text[32];
+    snprintf(pos_text, sizeof(pos_text), "Ln %u, Col %u", tb.cursor_row + 1, tb.cursor_col + 1);
+    uint16_t text_y = y0 + (header_height - FONT_HEIGHT) / 2;
+    draw_string(buf, 5, text_y, pos_text, 0xFFFFFF);
 }
 
 void render_screen() {
