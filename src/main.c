@@ -16,11 +16,11 @@
 #include "graphics/text_renderer.h"
 
 static uint8_t kbd_bit;
-static uint8_t timer_bit;
-static void   *video_mem   = NULL;
+// static uint8_t timer_bit;  // no longer using timer for auto-repeat
+// static void   *video_mem   = NULL;
 static void   *back_buffer = NULL;
 
-static TextBuffer tb;  // persistent text buffer
+static TextBuffer tb; // persistent text buffer
 
 bool handle_keyboard(uint16_t scancode);
 void render_screen(void);
@@ -34,7 +34,6 @@ int main(int argc, char *argv[]) {
 }
 
 void cleanup() {
-    res_timer_unsubscribe_int();
     keyboard_unsubscribe_int();
     if (set_text_mode() != RES_OK) fprintf(stderr, "Failed to restore text mode\n");
 }
@@ -62,13 +61,6 @@ void setup_graphics() {
 }
 
 void subscribe_to_devices() {
-    // Subscribe timer interrupts
-    if (res_timer_subscribe_int(&timer_bit) != RES_OK) {
-        fprintf(stderr, "Failed to subscribe timer\n");
-        cleanup();
-        exit(EXIT_FAILURE);
-    }
-
     // Subscribe keyboard interrupts
     if (keyboard_subscribe_int(&kbd_bit) != RES_OK) {
         fprintf(stderr, "Failed to subscribe keyboard\n");
@@ -88,8 +80,11 @@ int(proj_main_loop)(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    bool running = true;
-    int ipc_status;
+    // Initial render so the screen is shown before any keypress
+    render_screen();
+
+    bool    running = true;
+    int     ipc_status;
     message msg;
 
     // Main event loop
@@ -98,19 +93,22 @@ int(proj_main_loop)(int argc, char *argv[]) {
         if (is_ipc_notify(ipc_status) && _ENDPOINT_P(msg.m_source) == HARDWARE) {
             uint32_t irq_set = msg.m_notify.interrupts;
 
-            if (irq_set & timer_bit) {
-                // Timer interrupt: toggle cursor blink flag (optional)
-            }
-
+            // Keyboard interrupt: handle key make codes only
             if (irq_set & kbd_bit) {
                 uint16_t scancode;
-                keyboard_ih(&scancode);
-                if (scancode == BREAK_ESC) {
+                if (keyboard_ih(&scancode) != RES_OK) continue;
+                uint8_t code     = scancode & 0x7F;
+                bool    is_break = scancode & 0x0080;
+
+                if (is_break)              // ignore key releases
+                    continue;
+
+                if (code == 0x01) {        // ESC make code
                     running = false;
-                } else {
-                    // insert character into buffer or handle arrows
-                    // TODO Add scancode to char logic
-                    text_buffer_insert_char(&tb, (char)scancode);
+                } else if (code == 0x0E) { // Backspace make code
+                    text_buffer_delete_char(&tb);
+                } else {                   // Other printable key make
+                    text_buffer_insert_char(&tb, (char)code);
                 }
             }
         }
