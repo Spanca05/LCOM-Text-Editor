@@ -1,3 +1,8 @@
+/**
+ * @file text_buffer.h
+ * @brief Text buffer management for storing and editing text content.
+ */
+
 #ifndef TEXT_BUFFER_H
 #define TEXT_BUFFER_H
 
@@ -10,52 +15,69 @@
 
 /**
  * @brief Represents the text buffer and its state.
+ *
+ * Contains the character grid and the cursor position.
  */
 typedef struct {
-    char buffer[MAX_ROWS][MAX_COLS]; /**< 2D array to store text. */
-    uint16_t cursor_row; /**< Current row position of the cursor. */
-    uint16_t cursor_col; /**< Current column position of the cursor. */
+    char     buffer[MAX_ROWS][MAX_COLS]; /**< 2D array storing text characters. */
+    uint16_t cursor_row;                 /**< Current cursor row position. */
+    uint16_t cursor_col;                 /**< Current cursor column position. */
 } TextBuffer;
 
 /**
- * @brief Initializes the text buffer.
+ * @brief Initializes the text buffer and resets the cursor.
  *
- * Clears the buffer and sets the cursor to the top-left corner.
+ * Clears the buffer by filling spaces and sets the cursor to (0,0).
  *
- * @param tb Pointer to the TextBuffer structure.
+ * @param tb Pointer to the TextBuffer to initialize.
+ * @return RES_OK on success, or an error code.
  */
 Result(text_buffer_init)(TextBuffer *tb);
 
 /**
- * @brief Updates the text buffer with a character.
+ * @brief Inserts a character at the current cursor position.
  *
- * Inserts a character at the current cursor position and moves the cursor.
+ * Writes the character into the buffer, then advances the cursor,
+ * wrapping to the next line if needed.
  *
- * @param tb Pointer to the TextBuffer structure.
+ * @param tb Pointer to the TextBuffer.
  * @param c Character to insert.
+ * @return RES_OK on success, or an error code.
  */
 Result(text_buffer_insert_char)(TextBuffer *tb, char c);
 
 /**
- * @brief Moves the cursor within the text buffer.
+ * @brief Deletes the character to the left of the cursor.
  *
- * Updates the cursor position based on user input.
+ * Moves the cursor back one position, shifts the remainder of the line left,
+ * and fills the vacated space with a space character.
  *
- * @param tb Pointer to the TextBuffer structure.
- * @param row New row position.
- * @param col New column position.
+ * @param tb Pointer to the TextBuffer.
+ * @return RES_OK on success, or an error code.
+ */
+Result(text_buffer_delete_char)(TextBuffer *tb);
+
+/**
+ * @brief Moves the cursor to a specified location.
+ *
+ * Updates the cursor_row and cursor_col fields, ensuring they stay in bounds.
+ *
+ * @param tb Pointer to the TextBuffer.
+ * @param row Target row (0-based).
+ * @param col Target column (0-based).
+ * @return RES_OK on success, or an error code if out of bounds.
  */
 Result(text_buffer_move_cursor)(TextBuffer *tb, uint16_t row, uint16_t col);
 
 /**
- * @brief Renders the text buffer to the screen.
+ * @brief Renders the contents of the text buffer to the screen.
  *
- * Draws the contents of the text buffer using the text renderer.
+ * Draws each character at its appropriate screen position using draw_char.
  *
- * @param tb Pointer to the TextBuffer structure.
- * @param buf Pointer to the graphics buffer.
+ * @param tb Pointer to the TextBuffer.
+ * @param buf Graphics buffer (back buffer) pointer.
+ * @return RES_OK on success, or an error code.
  */
 Result(text_buffer_render)(const TextBuffer *tb, void *buf);
 
-
-#endif
+#endif // TEXT_BUFFER_H
