@@ -4,6 +4,7 @@
  */
 
 #include "text_buffer.h"
+#include "../drivers/graphics.h" // for mode_info
 #include "../graphics/font8x16.h"
 #include "../graphics/text_renderer.h"
 #include "../utils/result.h"
@@ -31,9 +32,11 @@ Result(text_buffer_insert_char)(TextBuffer *tb, char c) {
     tb->buffer[tb->cursor_row][tb->cursor_col] = c;
     // Advance cursor
     tb->cursor_col++;
-    if (tb->cursor_col >= MAX_COLS) {
+    // Wrap to next line based on dynamic screen width
+    uint16_t max_cols = mode_info.XResolution / FONT_WIDTH;
+    if (tb->cursor_col >= max_cols) {
         tb->cursor_col = 0;
-        tb->cursor_row = (tb->cursor_row + 1) % MAX_ROWS;
+        tb->cursor_row = (tb->cursor_row + 1) % (mode_info.YResolution / FONT_HEIGHT);
     }
     return RES_OK;
 }
@@ -41,26 +44,26 @@ Result(text_buffer_insert_char)(TextBuffer *tb, char c) {
 Result(text_buffer_delete_char)(TextBuffer *tb) {
     if (tb == NULL) return RES_INVALID_ARGUMENT;
 
-    // If at start of buffer, nothing to delete
+    // If at very start, nothing to delete
     if (tb->cursor_row == 0 && tb->cursor_col == 0) return RES_OK;
 
-    // Determine deletion position and update cursor
-    uint16_t del_row = tb->cursor_row;
-    uint16_t del_col;
-    if (tb->cursor_col > 0) {
-        del_col = tb->cursor_col - 1;
-    } else {
-        // At start of line: wrap to previous line
-        del_row = tb->cursor_row - 1;
-        del_col = MAX_COLS - 1;
-    }
-    tb->cursor_row = del_row;
-    tb->cursor_col = del_col;
+    // Compute dynamic dimensions
+    uint16_t max_cols = mode_info.XResolution / FONT_WIDTH;
 
-    // Shift characters left in the line to fill the gap
-    size_t move_count = (MAX_COLS - del_col - 1) * sizeof(char);
-    memmove(&tb->buffer[del_row][del_col], &tb->buffer[del_row][del_col + 1], move_count);
-    tb->buffer[del_row][MAX_COLS - 1] = ' ';
+    // Move cursor back one position
+    if (tb->cursor_col > 0) {
+        tb->cursor_col--;
+    } else if (tb->cursor_row > 0) {
+        tb->cursor_row--;
+        tb->cursor_col = max_cols - 1;
+    }
+
+    // Now delete at this new cursor position by shifting rest of line
+    uint16_t r   = tb->cursor_row;
+    uint16_t c   = tb->cursor_col;
+    size_t   cnt = (max_cols - 1 - c) * sizeof(char);
+    memmove(&tb->buffer[r][c], &tb->buffer[r][c + 1], cnt);
+    tb->buffer[r][max_cols - 1] = ' ';
 
     return RES_OK;
 }
