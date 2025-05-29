@@ -3,6 +3,7 @@
 
 // Enum for every physical key with a scancode (standard 104/105-key PC keyboard)
 // Includes shifted and AltGr symbols, formatted for clarity
+// Stil missing "acentos" fml
 typedef enum {
     CHAR_NONE = 0, // (none)
     CHAR_ESC,      // (escape)
@@ -94,27 +95,28 @@ typedef enum {
     CHAR_LESS,       // '<'
 
     // Shifted symbols (above numbers and main section)
-    CHAR_PIPE,        // '|'
-    CHAR_EXCLAMATION, // '!'
-    CHAR_QUOTE,       // '"'
-    CHAR_HASH,        // '#'
-    CHAR_DOLLAR,      // '$'
-    CHAR_PERCENT,     // '%'
-    CHAR_AMPERSAND,   // '&'
-    CHAR_SLASH,       // '/'
-    CHAR_LPAREN,      // '('
-    CHAR_RPAREN,      // ')'
-    CHAR_EQUAL,       // '='
-    CHAR_QUESTION,    // '?'
-    CHAR_RIGHT_ANGLE, // '»'
-    CHAR_ASTERISK,    // '*'
-    CHAR_GRAVE,       // '`'
-    CHAR_CIRCUMFLEX,  // '^'
-    CHAR_FOI,         // 'ª' (Feminine Ordinal Indicator)
-    CHAR_SEMICOLON,   // ';'
-    CHAR_COLON,       // ':'
-    CHAR_UNDERSCORE,  // '_'
-    CHAR_GREATER,     // '>'
+    CHAR_PIPE,          // '|'
+    CHAR_EXCLAMATION,   // '!'
+    CHAR_QUOTE,         // '"'
+    CHAR_HASH,          // '#'
+    CHAR_DOLLAR,        // '$'
+    CHAR_PERCENT,       // '%'
+    CHAR_AMPERSAND,     // '&'
+    CHAR_SLASH,         // '/'
+    CHAR_LPAREN,        // '('
+    CHAR_RPAREN,        // ')'
+    CHAR_EQUAL,         // '='
+    CHAR_QUESTION,      // '?'
+    CHAR_RIGHT_ANGLE,   // '»'
+    CHAR_ASTERISK,      // '*'
+    CHAR_GRAVE,         // '`'
+    CHAR_CIRCUMFLEX,    // '^'
+    CHAR_CEDILLA_UPPER, // 'Ç'
+    CHAR_FOI,           // 'ª' (Feminine Ordinal Indicator)
+    CHAR_SEMICOLON,     // ';'
+    CHAR_COLON,         // ':'
+    CHAR_UNDERSCORE,    // '_'
+    CHAR_GREATER,       // '>'
 
 
     // AltGr/Right Alt symbols (common on international layouts)
@@ -175,7 +177,7 @@ typedef enum {
 } Character;
 
 static const char *character_to_char_map[] = {
-    [CHAR_NONE] = NULL,   // (none)
+    [CHAR_NONE] = NULL, // (none)
     [CHAR_ESC]  = NULL, // (escape)
 
     // Lowercase Letters
@@ -265,24 +267,29 @@ static const char *character_to_char_map[] = {
     [CHAR_LESS]       = "<",        // '<'
 
     // Shifted symbols (above numbers and main section)
-    [CHAR_EXCLAMATION] = "!",  // '!'
-    [CHAR_HASH]        = "#",  // '#'
-    [CHAR_DOLLAR]      = "$",  // '$'
-    [CHAR_PERCENT]     = "%",  // '%'
-    [CHAR_CIRCUMFLEX]  = "^",  // '^'
-    [CHAR_AMPERSAND]   = "&",  // '&'
-    [CHAR_ASTERISK]    = "*",  // '*'
-    [CHAR_LPAREN]      = "(",  // '('
-    [CHAR_RPAREN]      = ")",  // ')'
-    [CHAR_UNDERSCORE]  = "_",  // '_'
-    [CHAR_PIPE]        = "|",  // '|'
-    [CHAR_COLON]       = ":",  // ':'
-    [CHAR_QUOTE]       = "\"", // '"'
-    [CHAR_GREATER]     = ">",  // '>'
-    [CHAR_QUESTION]    = "?",  // '?'
-    [CHAR_RIGHT_ANGLE] = "\xC2\xBB", // '»'
-    [CHAR_FOI]         = "\xC2\xAA", // 'ª'
-    
+    [CHAR_EXCLAMATION]   = "!",        // '!'
+    [CHAR_HASH]          = "#",        // '#'
+    [CHAR_DOLLAR]        = "$",        // '$'
+    [CHAR_PERCENT]       = "%",        // '%'
+    [CHAR_CIRCUMFLEX]    = "^",        // '^'
+    [CHAR_AMPERSAND]     = "&",        // '&'
+    [CHAR_ASTERISK]      = "*",        // '*'
+    [CHAR_GRAVE]         = "`",        // '`'
+    [CHAR_SLASH]         = "/",        // '/'
+    [CHAR_LPAREN]        = "(",        // '('
+    [CHAR_RPAREN]        = ")",        // ')'
+    [CHAR_EQUAL]         = "=",        // '='
+    [CHAR_UNDERSCORE]    = "_",        // '_'
+    [CHAR_PIPE]          = "|",        // '|'
+    [CHAR_SEMICOLON]     = ";",        // ';'
+    [CHAR_COLON]         = ":",        // ':'
+    [CHAR_QUOTE]         = "\"",       // '"'
+    [CHAR_GREATER]       = ">",        // '>'
+    [CHAR_QUESTION]      = "?",        // '?'
+    [CHAR_RIGHT_ANGLE]   = "\xC2\xBB", // '»'
+    [CHAR_FOI]           = "\xC2\xAA", // 'ª'
+    [CHAR_CEDILLA_UPPER] = "\xC3\x87", // 'Ç'
+
 
     // AltGr/Right Alt symbols (common on international layouts)
     [CHAR_AT]       = "@",            // '@'
@@ -311,5 +318,77 @@ static const char *character_to_char_map[] = {
     [CHAR_CAPSLOCK] = NULL,
 };
 
+// Maps each Character to its shifted version
+static const Character shift_character_map[] = {
+    // Lowercase Letters
+    [CHAR_a] = CHAR_A,
+    [CHAR_b] = CHAR_B,
+    [CHAR_c] = CHAR_C,
+    [CHAR_d] = CHAR_D,
+    [CHAR_e] = CHAR_E,
+    [CHAR_f] = CHAR_F,
+    [CHAR_g] = CHAR_G,
+    [CHAR_h] = CHAR_H,
+    [CHAR_i] = CHAR_I,
+    [CHAR_j] = CHAR_J,
+    [CHAR_k] = CHAR_K,
+    [CHAR_l] = CHAR_L,
+    [CHAR_m] = CHAR_M,
+    [CHAR_n] = CHAR_N,
+    [CHAR_o] = CHAR_O,
+    [CHAR_p] = CHAR_P,
+    [CHAR_q] = CHAR_Q,
+    [CHAR_r] = CHAR_R,
+    [CHAR_s] = CHAR_S,
+    [CHAR_t] = CHAR_T,
+    [CHAR_u] = CHAR_U,
+    [CHAR_v] = CHAR_V,
+    [CHAR_w] = CHAR_W,
+    [CHAR_x] = CHAR_X,
+    [CHAR_y] = CHAR_Y,
+    [CHAR_z] = CHAR_Z,
+
+    // Numbers (top row)
+    [CHAR_1] = CHAR_EXCLAMATION, // '!
+    [CHAR_2] = CHAR_QUOTE,       // '"'
+    [CHAR_3] = CHAR_HASH,        // '#'
+    [CHAR_4] = CHAR_DOLLAR,      // '$'
+    [CHAR_5] = CHAR_PERCENT,     // '%'
+    [CHAR_6] = CHAR_AMPERSAND,   // '&'
+    [CHAR_7] = CHAR_SLASH,       // '/'
+    [CHAR_8] = CHAR_LPAREN,      // '('
+    [CHAR_9] = CHAR_RPAREN,      // ')'
+    [CHAR_0] = CHAR_EQUAL,       // '='
+
+    // Symbols (main section, unshifted)
+    [CHAR_BACKSLASH]  = CHAR_PIPE,          // '\' -> '|'
+    [CHAR_APOSTROPHE] = CHAR_QUESTION,      // '\'' -> '?'
+    [CHAR_LEFT_ANGLE] = CHAR_RIGHT_ANGLE,   // '«' -> '»'
+    [CHAR_PLUS]       = CHAR_ASTERISK,      // '+' -> '*'
+    [CHAR_ACUTE]      = CHAR_GRAVE,         // '´' -> '`'
+    [CHAR_TILDE]      = CHAR_CIRCUMFLEX,    // '~' -> '^'
+    [CHAR_CEDILLA]    = CHAR_CEDILLA_UPPER, //'ç' -> 'Ç'
+    [CHAR_MOI]        = CHAR_FOI,           //'º' -> 'ª'
+    [CHAR_COMMA]      = CHAR_SEMICOLON,     // ',' -> ';'
+    [CHAR_DOT]        = CHAR_COLON,         // '.' -> ':'
+    [CHAR_MINUS]      = CHAR_UNDERSCORE,    // '-' -> '_'
+    [CHAR_LESS]       = CHAR_GREATER,       // '<' -> '>'
+};
+
+static const Character ralt_character_map[] = {
+    // Numbers (top row)
+    [CHAR_2] = CHAR_AT,       // '@'
+    [CHAR_3] = CHAR_POUND,    // '£'
+    [CHAR_4] = CHAR_SECTION,  // '§'
+    [CHAR_5] = CHAR_EURO,     // '€'
+    [CHAR_7] = CHAR_LCURLY,   // '{'
+    [CHAR_8] = CHAR_LBRACKET, // '['
+    [CHAR_9] = CHAR_RBRACKET, // ']'
+    [CHAR_0] = CHAR_RCURLY,   // '}'
+
+    // Symbols (main section, unshifted)
+    [CHAR_PLUS]  = CHAR_TREMA,    // '+' -> '¨'
+    [CHAR_ACUTE] = CHAR_RBRACKET, // '´' -> ']'
+};
 
 #endif

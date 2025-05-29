@@ -208,6 +208,10 @@ Result(character_handler)(Character *character, Cursor *cursor, KBD_modifier *kb
 
     else if (is_drawable(*character)) {
         cursor->visible = true;
+        if ((has_ralt(*character) && kbd_modifier->ralt)
+            || (has_shift(*character) && (kbd_modifier->shift || kbd_modifier->caps_lock)))
+            modify_character(*kbd_modifier, character);
+
         printf("This %s is drawble\n", (char *)character_to_char_map[*character]);
     }
 
@@ -281,28 +285,87 @@ bool is_kbd_modifier(Character character) {
     }
 }
 
-Result(character_to_caps)(Character *character) {
-    if (character == NULL) return RES_INVALID_ARGUMENT;
-
-    // If it's a lowercase letter, convert to uppercase
-    if (*character >= CHAR_a && *character <= CHAR_z) {
-        *character = (Character)(*character - (CHAR_a - CHAR_A));
-        return RES_OK;
+bool(has_shift)(Character character) {
+    switch (character) {
+    case CHAR_a:
+    case CHAR_b:
+    case CHAR_c:
+    case CHAR_d:
+    case CHAR_e:
+    case CHAR_f:
+    case CHAR_g:
+    case CHAR_h:
+    case CHAR_i:
+    case CHAR_j:
+    case CHAR_k:
+    case CHAR_l:
+    case CHAR_m:
+    case CHAR_n:
+    case CHAR_o:
+    case CHAR_p:
+    case CHAR_q:
+    case CHAR_r:
+    case CHAR_s:
+    case CHAR_t:
+    case CHAR_u:
+    case CHAR_v:
+    case CHAR_w:
+    case CHAR_x:
+    case CHAR_y:
+    case CHAR_z:
+    case CHAR_1:
+    case CHAR_2:
+    case CHAR_3:
+    case CHAR_4:
+    case CHAR_5:
+    case CHAR_6:
+    case CHAR_7:
+    case CHAR_8:
+    case CHAR_9:
+    case CHAR_0:
+    case CHAR_BACKSLASH:
+    case CHAR_APOSTROPHE:
+    case CHAR_LEFT_ANGLE:
+    case CHAR_PLUS:
+    case CHAR_ACUTE:
+    case CHAR_TILDE:
+    case CHAR_CEDILLA:
+    case CHAR_MOI:
+    case CHAR_COMMA:
+    case CHAR_DOT:
+    case CHAR_MINUS:
+    case CHAR_LESS      : return true;
+    default             : return false;
     }
-    // If not a letter, do nothing
-    return RES_INVALID_ARGUMENT;
 }
 
-Result(character_from_caps)(Character *character) {
+bool(has_ralt)(Character character) {
+    switch (character) {
+    case CHAR_2:
+    case CHAR_3:
+    case CHAR_4:
+    case CHAR_5:
+    case CHAR_7:
+    case CHAR_8:
+    case CHAR_9:
+    case CHAR_0:
+    case CHAR_PLUS:
+    case CHAR_ACUTE: return true;
+    default        : return false;
+    }
+}
+
+Result(modify_character)(KBD_modifier kbd_modifier, Character *character) {
     if (character == NULL) return RES_INVALID_ARGUMENT;
 
-    // If it's an uppercase letter, convert to lowercase
-    if (*character >= CHAR_A && *character <= CHAR_Z) {
-        *character = (Character)(*character + (CHAR_a - CHAR_A));
-        return RES_OK;
+    if (kbd_modifier.shift && kbd_modifier.caps_lock) return RES_OK;
+    else if (kbd_modifier.shift || kbd_modifier.caps_lock) {
+        *character = shift_character_map[*character];
+    } else if (kbd_modifier.ralt || (kbd_modifier.lalt && kbd_modifier.ctrl)) {
+        *character = ralt_character_map[*character];
     }
-    // If not a letter, do nothing
-    return RES_INVALID_ARGUMENT;
+
+    return RES_OK;
 }
 
 // Not a good inmplementation, because only allows ASCII, instead of UTF-8
@@ -358,12 +421,12 @@ Result(press_kbd_modifier)(KBD_modifier *kbd_modifier, Character character) {
     switch (character) {
     case CHAR_CAPSLOCK:
         kbd_modifier->caps_lock = !kbd_modifier->caps_lock;
-        break; // If you keep the shift pressed it keep flipping is value, should be constant
+        break; // If you keep the shift pressed it keep flipping is value, should be constant, Another issue: If you do the timing right, it also changes the logic fh 
     case CHAR_LSHIFT:
     case CHAR_RSHIFT: kbd_modifier->shift = true; break;
     case CHAR_LCTRL :
     case CHAR_RCTRL : kbd_modifier->ctrl = true; break;
-    case CHAR_LALT  : kbd_modifier->ralt = true; break;
+    case CHAR_LALT  : kbd_modifier->lalt = true; break;
     case CHAR_RALT  : kbd_modifier->ralt = true; break;
 
     default: return RES_INVALID_ARGUMENT;
@@ -401,7 +464,7 @@ Result(release_kbd_modifier)(KBD_modifier *kbd_modifier, Character character) {
     case CHAR_LCTRL   :
     case CHAR_RCTRL   : kbd_modifier->ctrl = false; break;
     case CHAR_LALT    : kbd_modifier->ralt = false; break;
-    case CHAR_RALT    : kbd_modifier->ralt = false; break;
+    case CHAR_RALT    : kbd_modifier->lalt = false; break;
 
     default: return RES_INVALID_ARGUMENT;
     }

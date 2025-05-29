@@ -19,9 +19,11 @@ Result(release_handler)(Character *character, Cursor *cursor, KBD_modifier *kbd_
 bool is_drawable(Character character);
 bool (is_kbd_modifier)(Character character);
 bool (is_arrow)(Character character);
+bool (has_shift)(Character character);
+bool (has_ralt) (Character character);
 
-Result(character_to_caps)(Character *character);
-Result(character_from_caps)(Character *character);
+
+Result(modify_character)(KBD_modifier kbd_modifier, Character *character);
 
 Result(insert_into_buffer)(char *buffer, Character character);
 Result(delete_from_buffer)(char *buffer, int pos);
