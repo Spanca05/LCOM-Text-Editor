@@ -64,6 +64,8 @@ typedef enum {
     CHAR_Y, // 'Y'
     CHAR_Z, // 'Z'
 
+    //
+
     // Numbers (top row)
     CHAR_1, // '1'
     CHAR_2, // '2'
@@ -80,14 +82,13 @@ typedef enum {
     CHAR_BACKSLASH,  // '\\'
     CHAR_APOSTROPHE, // '\''
     CHAR_LEFT_ANGLE, // '«'
-    CHAR_BACKSPACE,  // '\b'
     CHAR_TAB,        // '\t'
     CHAR_PLUS,       // '+'
-    CHAR_ACUTE,      // '´'
+    CHAR_ACUTE,      // '`'
     CHAR_TILDE,      // '~'
     CHAR_CEDILLA,    // 'ç'
     CHAR_MOI,        // 'º' (Masculine Ordinal Indicator)
-    CHAR_ENTER,      // '\n'
+    CHAR_NEWLINE,    // '\n'
     CHAR_COMMA,      // ','
     CHAR_DOT,        // '.'
     CHAR_MINUS,      // '-'
@@ -109,7 +110,7 @@ typedef enum {
     CHAR_QUESTION,      // '?'
     CHAR_RIGHT_ANGLE,   // '»'
     CHAR_ASTERISK,      // '*'
-    CHAR_GRAVE,         // '`'
+    CHAR_GRAVE,         // '´'
     CHAR_CIRCUMFLEX,    // '^'
     CHAR_CEDILLA_UPPER, // 'Ç'
     CHAR_FOI,           // 'ª' (Feminine Ordinal Indicator)
@@ -130,50 +131,56 @@ typedef enum {
     CHAR_RCURLY,   // '}'
     CHAR_TREMA,    // '¨'
 
-    // Arrow keys
-    CHAR_ARROW_UP,    // (Up Arrow)
-    CHAR_ARROW_DOWN,  // (Down Arrow)
-    CHAR_ARROW_LEFT,  // (Left Arrow)
-    CHAR_ARROW_RIGHT, // (Right Arrow)
 
-    // Modifier keys
-    CHAR_LSHIFT,   // (Left Shift)
-    CHAR_RSHIFT,   // (Right Shift)
-    CHAR_LCTRL,    // (Left Ctrl)
-    CHAR_RCTRL,    // (Right Ctrl)
-    CHAR_LALT,     // (Left Alt)
-    CHAR_RALT,     // (Right Alt)
-    CHAR_CAPSLOCK, // (Caps Lock)
-    // CHAR_LGUI, CHAR_RGUI, // (Windows/Command keys)
+    // Letters with accent marks (lowercase)
+    CHAR_a_ACUTE,  // 'à'
+    CHAR_a_GRAVE,  // 'á'
+    CHAR_a_CIRC,   // 'â'
+    CHAR_a_TILDE,  // 'ã'
+    CHAR_a_UMLAUT, // 'ä'
+    CHAR_a_RING,   // 'å'
+    CHAR_e_ACUTE,  // 'é'
+    CHAR_e_GRAVE,  // 'è'
+    CHAR_e_CIRC,   // 'ê'
+    CHAR_e_UMLAUT, // 'ë'
+    CHAR_i_ACUTE,  // 'í'
+    CHAR_i_GRAVE,  // 'ì'
+    CHAR_i_CIRC,   // 'î'
+    CHAR_i_UMLAUT, // 'ï'
+    CHAR_o_ACUTE,  // 'ó'
+    CHAR_o_GRAVE,  // 'ò'
+    CHAR_o_CIRC,   // 'ô'
+    CHAR_o_TILDE,  // 'õ'
+    CHAR_o_UMLAUT, // 'ö'
+    CHAR_u_ACUTE,  // 'ú'
+    CHAR_u_GRAVE,  // 'ù'
+    CHAR_u_CIRC,   // 'û'
+    CHAR_u_UMLAUT, // 'ü'
 
-
-    //! For now, unnecessary keys
-    // Function keys
-    // (Uncomment if needed)
-    // CHAR_F1, CHAR_F2, CHAR_F3, CHAR_F4, CHAR_F5, CHAR_F6,
-    // CHAR_F7, CHAR_F8, CHAR_F9, CHAR_F10, CHAR_F11, CHAR_F12,
-
-
-    // Navigation/edit keys
-    // (Uncomment if needed)
-    // CHAR_INSERT, CHAR_DELETE, CHAR_HOME, CHAR_END,
-    // CHAR_PAGEUP, CHAR_PAGEDOWN,
-
-
-    // Numpad keys
-    // (Uncomment if needed)
-    // CHAR_NUMLOCK, CHAR_NUMPAD_DIVIDE, CHAR_NUMPAD_ASTERISK, CHAR_NUMPAD_MINUS,
-    // CHAR_NUMPAD_PLUS, CHAR_NUMPAD_ENTER, CHAR_NUMPAD_DOT,
-    // CHAR_NUMPAD_0, CHAR_NUMPAD_1, CHAR_NUMPAD_2, CHAR_NUMPAD_3, CHAR_NUMPAD_4,
-    // CHAR_NUMPAD_5, CHAR_NUMPAD_6, CHAR_NUMPAD_7, CHAR_NUMPAD_8, CHAR_NUMPAD_9,
-
-    // Special keys
-    // (Uncomment if needed)
-    // CHAR_PRINT_SCREEN, CHAR_SCROLLLOCK, CHAR_PAUSE_BREAK, CHAR_MENU,
-
-    // Extra (optional, not all keyboards)
-    // CHAR_VOLUME_UP, CHAR_VOLUME_DOWN, CHAR_VOLUME_MUTE,
-    // CHAR_MEDIA_NEXT, CHAR_MEDIA_PREV, CHAR_MEDIA_STOP, CHAR_MEDIA_PLAY
+    // Letters with accent marks (uppercase)
+    CHAR_A_ACUTE_UPPER,  // 'Á'
+    CHAR_A_GRAVE_UPPER,  // 'À'
+    CHAR_A_CIRC_UPPER,   // 'Â'
+    CHAR_A_TILDE_UPPER,  // 'Ã'
+    CHAR_A_UMLAUT_UPPER, // 'Ä'
+    CHAR_A_RING_UPPER,   // 'Å'
+    CHAR_E_ACUTE_UPPER,  // 'É'
+    CHAR_E_GRAVE_UPPER,  // 'È'
+    CHAR_E_CIRC_UPPER,   // 'Ê'
+    CHAR_E_UMLAUT_UPPER, // 'Ë'
+    CHAR_I_ACUTE_UPPER,  // 'Í'
+    CHAR_I_GRAVE_UPPER,  // 'Ì'
+    CHAR_I_CIRC_UPPER,   // 'Î'
+    CHAR_I_UMLAUT_UPPER, // 'Ï'
+    CHAR_O_ACUTE_UPPER,  // 'Ó'
+    CHAR_O_GRAVE_UPPER,  // 'Ò'
+    CHAR_O_CIRC_UPPER,   // 'Ô'
+    CHAR_O_TILDE_UPPER,  // 'Õ'
+    CHAR_O_UMLAUT_UPPER, // 'Ö'
+    CHAR_U_ACUTE_UPPER,  // 'Ú'
+    CHAR_U_GRAVE_UPPER,  // 'Ù'
+    CHAR_U_CIRC_UPPER,   // 'Û'
+    CHAR_U_UMLAUT_UPPER, // 'Ü'
 } Character;
 
 static const char *character_to_char_map[] = {
@@ -252,14 +259,13 @@ static const char *character_to_char_map[] = {
     [CHAR_BACKSLASH]  = "\\",       // '\\'
     [CHAR_APOSTROPHE] = "'",        // '\''
     [CHAR_LEFT_ANGLE] = "\xC2\xAB", // '«' (UTF-8)
-    [CHAR_BACKSPACE]  = "\b",       // '\b'
     [CHAR_TAB]        = "\t",       // '\t'
     [CHAR_PLUS]       = "+",        // '+'
     [CHAR_ACUTE]      = "\xC2\xB4", // '´' (UTF-8)
     [CHAR_TILDE]      = "~",        // '~'
     [CHAR_CEDILLA]    = "\xC3\xA7", // 'ç' (UTF-8)
     [CHAR_MOI]        = "\xC2\xBA", // 'º' (UTF-8)
-    [CHAR_ENTER]      = "\n",       // '\n'
+    [CHAR_NEWLINE]    = "\n",       // '\n'
     [CHAR_COMMA]      = ",",        // ','
     [CHAR_DOT]        = ".",        // '.'
     [CHAR_MINUS]      = "-",        // '-'
@@ -301,21 +307,6 @@ static const char *character_to_char_map[] = {
     [CHAR_RBRACKET] = "]",            // ']'
     [CHAR_RCURLY]   = "}",            // '}'
     [CHAR_TREMA]    = "\xC2\xA8",     // '¨' (UTF-8)
-
-    // Arrow keys (no printable char)
-    [CHAR_ARROW_UP]    = NULL,
-    [CHAR_ARROW_DOWN]  = NULL,
-    [CHAR_ARROW_LEFT]  = NULL,
-    [CHAR_ARROW_RIGHT] = NULL,
-
-    // Modifier keys (no printable char)
-    [CHAR_LSHIFT]   = NULL,
-    [CHAR_RSHIFT]   = NULL,
-    [CHAR_LCTRL]    = NULL,
-    [CHAR_RCTRL]    = NULL,
-    [CHAR_LALT]     = NULL,
-    [CHAR_RALT]     = NULL,
-    [CHAR_CAPSLOCK] = NULL,
 };
 
 // Maps each Character to its shifted version

@@ -37,7 +37,7 @@ Result(scancode_to_character)(uint16_t scancode, Character *character) {
     // 0x0C - 0x0D: Apostrophe and Plus
     case 0x0C: *character = CHAR_APOSTROPHE; break; // '\'' (Shift: '?')
     case 0x0D:
-        *character = CHAR_PLUS;
+        *character = CHAR_LEFT_ANGLE;
         break;                                      // '«' (Shift: '»')
 
     // 0x0E - 0x0F: Backspace and Tab
