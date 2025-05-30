@@ -1,14 +1,14 @@
 #ifndef _LCOM_UTF8_READER_H_
 #define _LCOM_UTF8_READER_H_
 
-#include "../utils/result.h" 
+#include "../utils/result.h"
 #include "character.h"
 #include <stdint.h>
 #include <stdio.h>
 
 typedef struct {
     Character character;
-    int bytes_consumed;
+    int       bytes_consumed;
 } UTF8_DecodeResult;
 
 // Decodes up to 4 UTF-8 bytes into a Character enum value

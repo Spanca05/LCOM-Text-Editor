@@ -14,6 +14,7 @@
 #include "model/character.h"
 #include "model/key.h"
 #include "model/modifiers.h"
+#include "model/utf8_reader.h"
 #include "utils/result.h"
 
 // Function definitions

@@ -26,7 +26,8 @@ SRCS = main.c \
 		\
 		font16x32.c \
 		text_renderer.c \
-		buffer_renderer.c
+		buffer_renderer.c \
+		utf8_reader.c
 
 # additional compilation flags
 # "-Wall -Wextra -Werror -I . -std=c11 -Wno-unused-parameter" are already set
