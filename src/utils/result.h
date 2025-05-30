@@ -17,6 +17,7 @@ typedef enum Result {
     RES_PERMISSION_ERROR, // Insufficient permissions for the operation
     RES_TIMEOUT,          // Operation timed out
     RES_UNSUPPORTED_MODE, // Unsupported mode or configuration
+    RES_UNINITIALIZED,    // Value not initialized
     RES_HARDWARE_ERROR,   // Hardware-related error
     RES_NOT_READY         // Value not ready
 } Result;

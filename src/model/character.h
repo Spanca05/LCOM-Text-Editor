@@ -179,14 +179,70 @@ typedef enum Character {
     CHAR_U_UMLAUT,      // 'Ü'
 } Character;
 
+/**
+ * @brief Converts a key and modifiers into a character.
+ *
+ * This function maps a given key and its associated modifiers (e.g., shift, caps lock)
+ * to a corresponding character. It also determines if a text modifier (e.g., acute accent)
+ * was used in the conversion.
+ *
+ * @param key The key to be converted.
+ * @param modifiers The modifiers applied to the key.
+ * @param character Pointer to store the resulting character.
+ * @param textModifierUsed Pointer to store whether a text modifier was used.
+ * @return Result indicating success or failure of the conversion.
+ */
 Result key_to_character(Key key, Modifiers modifiers, Character *character, bool *textModifierUsed);
 
+/**
+ * @brief Checks if a character is a text modifier.
+ *
+ * Determines if the given character is a text modifier, such as an accent or umlaut.
+ *
+ * @param character The character to check.
+ * @return True if the character is a text modifier, false otherwise.
+ */
 bool character_is_text_modifier(Character character);
 
+/**
+ * @brief Converts a character to a text modifier.
+ *
+ * Maps a character representing a text modifier (e.g., acute accent) to its corresponding
+ * TextModifier enum value.
+ *
+ * @param character The character to convert.
+ * @return The corresponding TextModifier value, or TEXT_MOD_NONE if not applicable.
+ */
 TextModifier character_to_text_modifier(Character character);
 
+/**
+ * @brief Converts a text modifier to a character.
+ *
+ * Maps a TextModifier enum value to its corresponding character representation.
+ *
+ * @param textModifier The text modifier to convert.
+ * @return The corresponding character, or CHAR_NONE if not applicable.
+ */
 Character text_modifier_to_character(TextModifier textModifier);
 
+/**
+ * @brief Converts a string to an array of characters.
+ *
+ * Converts a given string into an array of Character enums. The resulting array is dynamically
+ * allocated and must be freed by the caller.
+ *
+ * @param string The input string to convert.
+ * @param n The length of the string.
+ * @param characters Pointer to store the resulting array of Character enums.
+ * @return Result indicating success or failure of the conversion.
+ */
+Result string_to_characters(char *string, uint64_t n, Character **characters);
+
+/**
+ * @brief Array of character names.
+ *
+ * Provides string representations of the Character enum values for debugging or display purposes.
+ */
 extern const char *character_names[];
 
 #endif // CHARACTER_H

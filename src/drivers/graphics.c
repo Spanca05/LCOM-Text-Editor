@@ -2,18 +2,21 @@
 #include "../utils/result.h"
 #include <lcom/lcf.h>
 #include <lcom/video_gr.h>
+#include <stdlib.h>
 #include <string.h>
 
 // Global variable to store VBE mode information
 vbe_mode_info_t mode_info;
 
 // Pointers and variables to store video memory and resolution details
-static void    *video_mem;
+static void    *video_buffer      = NULL;
+static void    *video_back_buffer = NULL;
 static uint16_t h_res;
 static uint16_t v_res;
 static uint8_t  bits_per_pixel;
+static uint32_t fb_size = 0;
 
-Result(set_text_mode)() {
+Result set_text_mode() {
     reg86_t reg86;
     memset(&reg86, 0, sizeof(reg86));
 
@@ -26,7 +29,7 @@ Result(set_text_mode)() {
     return RES_OK;
 }
 
-Result(set_graphic_mode)(uint16_t submode) {
+Result set_graphic_mode(uint16_t submode) {
     reg86_t reg86;
     memset(&reg86, 0, sizeof(reg86));
 
@@ -39,25 +42,24 @@ Result(set_graphic_mode)(uint16_t submode) {
     return RES_OK;
 }
 
-Result(res_vg_init)(uint16_t mode, void **video_memory) {
-    if (video_memory == NULL) return RES_INVALID_ARGUMENT;
-
+Result res_vg_init(uint16_t mode) {
     if (vbe_get_mode_info(mode, &mode_info) != RES_OK) return RES_UNSUPPORTED_MODE;
 
     h_res          = mode_info.XResolution;
     v_res          = mode_info.YResolution;
     bits_per_pixel = mode_info.BitsPerPixel;
 
-    phys_bytes   phys_addr        = mode_info.PhysBasePtr;
-    unsigned int framebuffer_size = mode_info.XResolution * mode_info.YResolution * (mode_info.BitsPerPixel / 8);
+    phys_bytes phys_addr = mode_info.PhysBasePtr;
+    /* compute and store framebuffer size directly */
+    fb_size              = mode_info.XResolution * mode_info.YResolution * (mode_info.BitsPerPixel / 8);
 
     struct minix_mem_range mr;
     mr.mr_base  = phys_addr;
-    mr.mr_limit = mr.mr_base + framebuffer_size - 1;
+    mr.mr_limit = mr.mr_base + fb_size - 1;
 
     if (sys_privctl(SELF, SYS_PRIV_ADD_MEM, &mr) != RES_OK) return RES_PERMISSION_ERROR;
 
-    void *mapped_mem = vm_map_phys(SELF, (void *)phys_addr, framebuffer_size);
+    void *mapped_mem = vm_map_phys(SELF, (void *)phys_addr, fb_size);
     if (mapped_mem == MAP_FAILED) return RES_MEMORY_ERROR;
 
     reg86_t reg86;
@@ -69,11 +71,47 @@ Result(res_vg_init)(uint16_t mode, void **video_memory) {
 
     if (sys_int86(&reg86) != RES_OK) return RES_HARDWARE_ERROR;
 
-    *video_memory = mapped_mem;
+    video_buffer = mapped_mem;
     return RES_OK;
 }
 
-Result(res_normalize_color)(uint32_t *color) {
+Result init_backbuffer() {
+    uint32_t size;
+    Result   result = get_framebuffer_size(&size);
+    if (result != RES_OK) return result;
+
+    void *buf = malloc(size);
+    if (buf == NULL) return RES_MEMORY_ERROR;
+
+    video_back_buffer = buf;
+    return RES_OK;
+}
+
+Result free_backbuffer() {
+    free(video_back_buffer);
+    return RES_OK;
+}
+
+Result swap_buffers() {
+    if (video_buffer == NULL) return RES_UNINITIALIZED;
+    if (video_back_buffer == NULL) return RES_UNINITIALIZED;
+
+    uint32_t size;
+    Result   result = get_framebuffer_size(&size);
+    if (result != RES_OK) return result;
+
+    memcpy(video_buffer, video_back_buffer, size);
+    return RES_OK;
+}
+
+Result get_framebuffer_size(uint32_t *size) {
+    if (size == NULL) return RES_INVALID_ARGUMENT;
+    if (fb_size == 0) return RES_UNINITIALIZED;
+    *size = fb_size;
+    return RES_OK;
+}
+
+Result res_normalize_color(uint32_t *color) {
     if (mode_info.MemoryModel == 4 || mode_info.BitsPerPixel == 8) {
         // Indexed color
         *color &= ((1 << mode_info.BitsPerPixel) - 1);
@@ -81,31 +119,41 @@ Result(res_normalize_color)(uint32_t *color) {
     }
 
     // Direct color
-    uint32_t color_copy = *color;
-    uint32_t r          = (color_copy >> mode_info.RedFieldPosition) & ((1 << mode_info.RedMaskSize) - 1);
-    uint32_t g          = (color_copy >> mode_info.GreenFieldPosition) & ((1 << mode_info.GreenMaskSize) - 1);
-    uint32_t b          = (color_copy >> mode_info.BlueFieldPosition) & ((1 << mode_info.BlueMaskSize) - 1);
+    uint32_t r = (*color >> 16) & 0xFF; // Extract red component
+    uint32_t g = (*color >> 8) & 0xFF;  // Extract green component
+    uint32_t b = *color & 0xFF;         // Extract blue component
+
+    r = (r >> (8 - mode_info.RedMaskSize)) & ((1 << mode_info.RedMaskSize) - 1);
+    g = (g >> (8 - mode_info.GreenMaskSize)) & ((1 << mode_info.GreenMaskSize) - 1);
+    b = (b >> (8 - mode_info.BlueMaskSize)) & ((1 << mode_info.BlueMaskSize) - 1);
+
     *color
         = (r << mode_info.RedFieldPosition) | (g << mode_info.GreenFieldPosition) | (b << mode_info.BlueFieldPosition);
+
     return RES_OK;
 }
 
-Result(res_vg_draw_pixel)(uint16_t x, uint16_t y, uint32_t color) {
+Result res_vg_draw_pixel(uint16_t x, uint16_t y, uint32_t color) {
     if (x >= h_res || y >= v_res) return RES_INVALID_ARGUMENT;
+
     uint8_t  bytes_per_pixel = (bits_per_pixel + 7) / 8;
     uint32_t index           = (y * h_res + x) * bytes_per_pixel;
+
     res_normalize_color(&color);
-    if (memcpy((uint8_t *)video_mem + index, &color, bytes_per_pixel) == NULL) return RES_MEMORY_ERROR;
+
+    uint8_t *buffer = (uint8_t *)video_back_buffer;
+    for (uint8_t i = 0; i < bytes_per_pixel; i++) buffer[index + i] = (color >> (i * 8)) & 0xFF;
+    
     return RES_OK;
 }
 
-Result(res_vg_draw_hline)(uint16_t x, uint16_t y, uint16_t len, uint32_t color) {
+Result res_vg_draw_hline(uint16_t x, uint16_t y, uint16_t len, uint32_t color) {
     for (uint16_t i = 0; i < len; i++)
         if (res_vg_draw_pixel(x + i, y, color) != RES_OK) return RES_IO_ERROR;
     return RES_OK;
 }
 
-Result(res_vg_draw_rectangle)(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color) {
+Result res_vg_draw_rectangle(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color) {
     for (uint16_t i = 0; i < height; i++)
         if (res_vg_draw_hline(x, y + i, width, color) != RES_OK) return RES_IO_ERROR;
     return RES_OK;
