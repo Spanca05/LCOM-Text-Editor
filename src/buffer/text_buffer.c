@@ -5,7 +5,7 @@
 
 #include "text_buffer.h"
 #include "../drivers/graphics.h" // for mode_info
-#include "../graphics/font8x16.h"
+#include "../graphics/font16x32.h"
 #include "../graphics/text_renderer.h"
 #include "../utils/result.h"
 #include <stddef.h>
@@ -17,7 +17,7 @@ Result(text_buffer_init)(TextBuffer *tb) {
 
     // Clear the buffer and reset cursor
     for (int row = 0; row < MAX_ROWS; row++) {
-        for (int col = 0; col < MAX_COLS; col++) { tb->buffer[row][col] = ' '; }
+        for (int col = 0; col < MAX_COLS; col++) { tb->buffer[row][col] = 65; }
     }
     tb->cursor_row = 0;
     tb->cursor_col = 0;
