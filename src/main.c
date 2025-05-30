@@ -129,7 +129,7 @@ static void render_header(void *buf, uint16_t header_height) {
     // Text "File" on left, 'X' on right
     uint16_t text_y = (header_height - FONT_HEIGHT) / 2;
     draw_string(buf, 5, text_y, "File", 0xFFFFFF);
-    draw_char(buf, mode_info.XResolution - FONT_WIDTH - 5, text_y, 23, 0xFF0000);
+    draw_character(buf, mode_info.XResolution - FONT_WIDTH - 5, text_y, 23, 0xFF0000);
 }
 
 // Render the window footer
@@ -163,29 +163,4 @@ void render_screen() {
 
     // Swap buffers
     swap_buffers(back_buffer);
-}
-
-void test_text_buffer() {
-    TextBuffer tb;
-
-    // Initialize the text buffer
-    if (text_buffer_init(&tb) != RES_OK) {
-        printf("Failed to initialize text buffer\n");
-        return;
-    }
-
-    // Insert a character at (0, 0)
-    text_buffer_insert_char(&tb, 'A');
-    printf("Buffer after inserting 'A' at (0, 0):\n");
-    for (int row = 0; row < MAX_ROWS; row++) {
-        for (int col = 0; col < MAX_COLS; col++) { putchar(tb.buffer[row][col]); }
-        putchar('\n');
-    }
-
-    // Move the cursor to (5, 10)
-    if (text_buffer_move_cursor(&tb, 5, 10) != RES_OK) {
-        printf("Failed to move cursor\n");
-        return;
-    }
-    printf("Cursor moved to row %d, col %d\n", tb.cursor_row, tb.cursor_col);
 }

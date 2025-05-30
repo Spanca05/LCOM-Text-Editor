@@ -90,7 +90,7 @@ Result(text_buffer_render)(const TextBuffer *tb, void *buf, uint16_t y_offset) {
         for (uint16_t col = 0; col < MAX_COLS; col++) {
             uint16_t x = col * FONT_WIDTH;
             uint16_t y = y_offset + row * FONT_HEIGHT;
-            draw_char(buf, x, y, tb->buffer[row][col], 0xFFFFFF);
+            draw_character(buf, x, y, tb->buffer[row][col], 0xFFFFFF);
         }
     }
     return RES_OK;

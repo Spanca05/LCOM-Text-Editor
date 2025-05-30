@@ -21,7 +21,7 @@
  * @param c The ASCII character to draw.
  * @param color The direct-color value to use when drawing the character.
  */
-void draw_char(void *buf, uint16_t x, uint16_t y, char c, uint32_t color);
+void draw_character(void *buf, uint16_t x, uint16_t y, int c, uint32_t color);
 
 /**
  * @brief Draw a null-terminated string at a specific screen coordinate.
@@ -35,6 +35,6 @@ void draw_char(void *buf, uint16_t x, uint16_t y, char c, uint32_t color);
  * @param s The null-terminated string to draw.
  * @param color The direct-color value to use when drawing the text.
  */
-void draw_string(void *buf, uint16_t x, uint16_t y, const char *s, uint32_t color);
+void draw_string(void *buf, uint16_t x, uint16_t y, const int *s, uint32_t color);
 
 #endif // TEXT_RENDERER_H
