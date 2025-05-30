@@ -1,7 +1,7 @@
 #ifndef RESULT_H
 #define RESULT_H
 
-typedef enum {
+typedef enum Result {
     // Success, no error
     RES_OK = 0,
 
@@ -9,6 +9,8 @@ typedef enum {
     RES_ERROR,
 
     // Specific errors
+    RES_DOES_NOT_EXIST,   // Resource or entity does not exist
+    RES_UNIMPLEMENTED,    // Feature or functionality is not implemented
     RES_INVALID_ARGUMENT, // Invalid argument passed to a function
     RES_IO_ERROR,         // Input/output operation failed
     RES_MEMORY_ERROR,     // Memory allocation or mapping failed
