@@ -17,13 +17,17 @@ SRCS = main.c \
 		mouse.c \
 		graphics.c \
 		management.c \
+		\
 		utils.c \
 		key.c \
 		character.c \
-		buffer.c\
+		cursor.c \
+		line.c \
+		buffer.c \
+		\
 		font16x32.c \
 		text_renderer.c \
-		text_buffer.c
+		buffer_renderer.c
 
 # additional compilation flags
 # "-Wall -Wextra -Werror -I . -std=c11 -Wno-unused-parameter" are already set

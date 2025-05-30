@@ -19,7 +19,7 @@ extern Buffer text_buffer;
 /**
  * Initializes the buffer, including the cursor and the first line.
  */
-void init_buffer();
+Result init_buffer();
 
 /**
  * Increases the buffer's capacity by a predefined segment size.

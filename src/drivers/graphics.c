@@ -3,6 +3,7 @@
 #include <lcom/lcf.h>
 #include <lcom/video_gr.h>
 #include <string.h>
+#include <stdlib.h>
 
 // Global variable to store VBE mode information
 vbe_mode_info_t mode_info;

@@ -1,5 +1,7 @@
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "buffer.h"
 #include "character.h"
@@ -8,7 +10,7 @@
 // Buffer State
 Buffer text_buffer;
 
-void init_buffer() {
+Result init_buffer() {
     // Init cursor
     text_buffer.cursor.column  = 1;
     text_buffer.cursor.line    = 1;
@@ -22,6 +24,8 @@ void init_buffer() {
     // Update buffer state
     text_buffer.lines    = lines;
     text_buffer.capacity = BUFFER_SEGMENT_SIZE;
+
+    return RES_OK;
 }
 
 Result increase_buffer_size() {
@@ -52,10 +56,13 @@ Result add_line_at(uint64_t position) {
     // If position is in the middle
     // Shift lines down
     if (position > 0 && position <= text_buffer.length)
-        memmove(&text_buffer.lines[position], &text_buffer.lines[position - 1], (text_buffer.length - position + 1) * sizeof(Line));
+        memmove(
+            &text_buffer.lines[position], &text_buffer.lines[position - 1],
+            (text_buffer.length - position + 1) * sizeof(Line)
+        );
 
     // If position is past the end of the buffer
-    if (position < 0 || position > text_buffer.length + 1) return RES_INVALID_ARGUMENT;
+    if (position > text_buffer.length + 1) return RES_INVALID_ARGUMENT;
 
     // Insert new line
     result = create_line(&text_buffer.lines[position - 1]);
@@ -71,7 +78,9 @@ Result remove_line_at(uint64_t position) {
     if (position == 0 || position > text_buffer.length) return RES_INVALID_ARGUMENT;
 
     // Shift lines up
-    memmove(&text_buffer.lines[position - 1], &text_buffer.lines[position], (text_buffer.length - position) * sizeof(Line));
+    memmove(
+        &text_buffer.lines[position - 1], &text_buffer.lines[position], (text_buffer.length - position) * sizeof(Line)
+    );
 
     // Update buffer length
     text_buffer.length--;

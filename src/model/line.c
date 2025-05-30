@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "../model/character.h"
 #include "line.h"
@@ -68,7 +69,7 @@ Result add_character_at(Line *line, Character character, uint64_t position) {
         memmove(&line->data[position], &line->data[position - 1], (line->length - position + 1) * sizeof(Character));
 
     // If position is past the end of the line
-    if (position < 0 || position > line->length + 1) return RES_INVALID_ARGUMENT;
+    if (position > line->length + 1) return RES_INVALID_ARGUMENT;
 
     // Insert the new character
     line->data[position - 1] = character;
