@@ -15,7 +15,7 @@ static uint16_t v_res;
 static uint8_t  bits_per_pixel;
 static uint32_t fb_size = 0;
 
-Result(set_text_mode)() {
+Result set_text_mode() {
     reg86_t reg86;
     memset(&reg86, 0, sizeof(reg86));
 
@@ -28,7 +28,7 @@ Result(set_text_mode)() {
     return RES_OK;
 }
 
-Result(set_graphic_mode)(uint16_t submode) {
+Result set_graphic_mode(uint16_t submode) {
     reg86_t reg86;
     memset(&reg86, 0, sizeof(reg86));
 
@@ -41,7 +41,7 @@ Result(set_graphic_mode)(uint16_t submode) {
     return RES_OK;
 }
 
-Result(res_vg_init)(uint16_t mode) {
+Result res_vg_init(uint16_t mode) {
     if (vbe_get_mode_info(mode, &mode_info) != RES_OK) return RES_UNSUPPORTED_MODE;
 
     h_res          = mode_info.XResolution;
@@ -74,7 +74,7 @@ Result(res_vg_init)(uint16_t mode) {
     return RES_OK;
 }
 
-Result(init_backbuffer)() {
+Result init_backbuffer() {
     uint32_t size;
     Result   result = get_framebuffer_size(&size);
     if (result != RES_OK) return result;
@@ -86,12 +86,12 @@ Result(init_backbuffer)() {
     return RES_OK;
 }
 
-Result(free_backbuffer)() {
+Result free_backbuffer() {
     free(video_back_buffer);
     return RES_OK;
 }
 
-Result(swap_buffers)() {
+Result swap_buffers() {
     if (video_buffer == NULL) return RES_UNINITIALIZED;
     if (video_back_buffer == NULL) return RES_UNINITIALIZED;
 
@@ -103,14 +103,14 @@ Result(swap_buffers)() {
     return RES_OK;
 }
 
-Result(get_framebuffer_size)(uint32_t *size) {
+Result get_framebuffer_size(uint32_t *size) {
     if (size == NULL) return RES_INVALID_ARGUMENT;
     if (fb_size == 0) return RES_UNINITIALIZED;
     *size = fb_size;
     return RES_OK;
 }
 
-Result(res_normalize_color)(uint32_t *color) {
+Result res_normalize_color(uint32_t *color) {
     if (mode_info.MemoryModel == 4 || mode_info.BitsPerPixel == 8) {
         // Indexed color
         *color &= ((1 << mode_info.BitsPerPixel) - 1);
@@ -127,7 +127,7 @@ Result(res_normalize_color)(uint32_t *color) {
     return RES_OK;
 }
 
-Result(res_vg_draw_pixel)(uint16_t x, uint16_t y, uint32_t color) {
+Result res_vg_draw_pixel(uint16_t x, uint16_t y, uint32_t color) {
     if (x >= h_res || y >= v_res) return RES_INVALID_ARGUMENT;
     uint8_t  bytes_per_pixel = (bits_per_pixel + 7) / 8;
     uint32_t index           = (y * h_res + x) * bytes_per_pixel;
@@ -136,13 +136,13 @@ Result(res_vg_draw_pixel)(uint16_t x, uint16_t y, uint32_t color) {
     return RES_OK;
 }
 
-Result(res_vg_draw_hline)(uint16_t x, uint16_t y, uint16_t len, uint32_t color) {
+Result res_vg_draw_hline(uint16_t x, uint16_t y, uint16_t len, uint32_t color) {
     for (uint16_t i = 0; i < len; i++)
         if (res_vg_draw_pixel(x + i, y, color) != RES_OK) return RES_IO_ERROR;
     return RES_OK;
 }
 
-Result(res_vg_draw_rectangle)(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color) {
+Result res_vg_draw_rectangle(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color) {
     for (uint16_t i = 0; i < height; i++)
         if (res_vg_draw_hline(x, y + i, width, color) != RES_OK) return RES_IO_ERROR;
     return RES_OK;
