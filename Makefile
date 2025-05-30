@@ -6,7 +6,6 @@ PROG=proj
 .PATH: ${.CURDIR}/src/drivers
 .PATH: ${.CURDIR}/src/model
 .PATH: ${.CURDIR}/src/graphics
-.PATH: ${.CURDIR}/src/buffer
  
 
 # source code files to be compiled
