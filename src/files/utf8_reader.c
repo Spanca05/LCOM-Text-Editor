@@ -97,9 +97,8 @@ Result utf8_decode_character(const uint8_t *bytes, int available_bytes, UTF8_Dec
 }
 
 Result read_utf8_file(const char *filename, Character ***lines, int *line_count, int **line_lengths) {
-    if (filename == NULL || lines == NULL || line_count == NULL || line_lengths == NULL) {
-        return RES_INVALID_ARGUMENT;
-    }
+    if (filename == NULL || lines == NULL || line_count == NULL || line_lengths == NULL) return RES_INVALID_ARGUMENT;
+
 
     FILE *file = fopen(filename, "rb");
     if (file == NULL) return RES_IO_ERROR;
@@ -130,9 +129,9 @@ Result read_utf8_file(const char *filename, Character ***lines, int *line_count,
 
     // Count lines
     int num_lines = 1; // At least one line
-    for (long i = 0; i < file_size; i++) {
+    for (long i = 0; i < file_size; i++)
         if (buffer[i] == '\n') num_lines++;
-    }
+
 
     // Allocate arrays
     Character **file_lines = malloc(num_lines * sizeof(Character *));
@@ -231,25 +230,4 @@ void free_file_lines(Character **lines, int line_count) {
 
     for (int i = 0; i < line_count; i++) { free(lines[i]); }
     free(lines);
-}
-
-Result write_utf8_file(const char *filename, Character **lines, int line_count, int *line_lengths) {
-    if (filename == NULL || lines == NULL || line_lengths == NULL) { return RES_INVALID_ARGUMENT; }
-
-    FILE *file = fopen(filename, "w");
-    if (file == NULL) { return RES_IO_ERROR; }
-
-    for (int i = 0; i < line_count; i++) {
-        // Write each character in the line
-        for (int j = 0; j < line_lengths[i]; j++) {
-            const char *utf8_str = character_to_utf8(lines[i][j]);
-            if (utf8_str != NULL && utf8_str[0] != '\0') { fputs(utf8_str, file); }
-        }
-
-        // Add newline at end of each line - except for the last line
-        if (i < line_count - 1) { fputc('\n', file); }
-    }
-
-    fclose(file);
-    return RES_OK;
 }

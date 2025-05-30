@@ -57,6 +57,9 @@ int(proj_main_loop)(int argc, char *argv[]) {
     modifiers.shift        = false;
     modifiers.textModifier = TEXT_MOD_NONE;
 
+    // Load File
+    read_utf8_file("notes.txt", )
+
     // Main event loop
     running = true;
     int     ipc_status;
