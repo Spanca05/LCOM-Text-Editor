@@ -7,6 +7,8 @@
 
 // Global variable to store VBE mode information
 extern vbe_mode_info_t mode_info;
+extern uint16_t        h_res;
+extern uint16_t        v_res;
 
 /**
  * @brief Sets the text mode.
