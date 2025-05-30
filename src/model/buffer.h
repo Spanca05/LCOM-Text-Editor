@@ -14,6 +14,8 @@ typedef struct Buffer {
     size_t length;
 } Buffer;
 
+extern Buffer text_buffer;
+
 /**
  * Initializes the buffer, including the cursor and the first line.
  */
