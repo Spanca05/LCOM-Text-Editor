@@ -13,7 +13,7 @@
 #include "drivers/i8254.h"
 #include "drivers/keyboard.h"
 #include "drivers/timer.h"
-#include "graphics/font8x16.h"
+#include "graphics/font16x32.h"
 #include "graphics/text_renderer.h"
 
 static uint8_t kbd_bit;
@@ -129,7 +129,7 @@ static void render_header(void *buf, uint16_t header_height) {
     // Text "File" on left, 'X' on right
     uint16_t text_y = (header_height - FONT_HEIGHT) / 2;
     draw_string(buf, 5, text_y, "File", 0xFFFFFF);
-    draw_char(buf, mode_info.XResolution - FONT_WIDTH - 5, text_y, 'X', 0xFF0000);
+    draw_char(buf, mode_info.XResolution - FONT_WIDTH - 5, text_y, 23, 0xFF0000);
 }
 
 // Render the window footer
