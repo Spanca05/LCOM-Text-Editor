@@ -187,6 +187,8 @@ TextModifier character_to_text_modifier(Character character);
 
 Character text_modifier_to_character(TextModifier textModifier);
 
+Result string_to_characters(char *string, uint64_t n, Character **characters);
+
 extern const char *character_names[];
 
 #endif // CHARACTER_H

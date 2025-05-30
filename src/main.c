@@ -3,23 +3,25 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "buffer/text_buffer.h"
-#include "drivers/VBE.h"
 #include "drivers/graphics.h"
-#include "drivers/i8042.h"
-#include "drivers/i8254.h"
 #include "drivers/keyboard.h"
 #include "drivers/management.h"
+#include "graphics/buffer_renderer.h"
+#include "graphics/font16x32.h"
+#include "graphics/text_renderer.h"
 #include "model/buffer.h"
 #include "model/character.h"
-#include "model/cursor-rato.h"
 #include "model/key.h"
 #include "model/modifiers.h"
 #include "utils/result.h"
 
 // Function definitions
-void handle_timer_interrupts();
-void handle_keyboard_interrupt();
+void        handle_timer_interrupts();
+void        handle_keyboard_interrupt();
+void        render_screen();
+static void render_header(uint16_t header_height);
+static void render_footer(uint16_t header_height);
+
 
 // Drivers Info
 static uint8_t timer_bit;
@@ -52,7 +54,6 @@ int(proj_main_loop)(int argc, char *argv[]) {
     modifiers.shift        = false;
     modifiers.textModifier = TEXT_MOD_NONE;
 
-
     // Main event loop
     bool    running = true;
     int     ipc_status;
@@ -69,9 +70,7 @@ int(proj_main_loop)(int argc, char *argv[]) {
             if (irq_set & kbd_bit) handle_keyboard_interrupt();
         }
 
-        // Clear the screen
-        printf("\033[2J\033[H");
-        print_buffer_state(modifiers);
+        render_screen();
     }
 
     // Cleanup and restore text mode
@@ -81,7 +80,7 @@ int(proj_main_loop)(int argc, char *argv[]) {
 
 // Timer Interrupt Handler
 void handle_timer_interrupts() {
-    tick_cursor();
+    buffer_clock_tick();
     // TODO Handle timer interrupts
 }
 
@@ -182,5 +181,62 @@ void handle_keyboard_interrupt() {
     if (modifiers.textModifier != TEXT_MOD_NONE && character == CHAR_SPACE) return;
 
     // Add character to the buffer
+    printf("Adding character: %s\n", character_names[character]);
     add_character_to_buffer(character);
+}
+
+void render_screen() {
+    // Clear screen to grey
+    res_vg_draw_rectangle(0, 0, mode_info.XResolution, mode_info.YResolution, 0xCCCCCC);
+
+    // Header and footer heights
+    uint16_t header_height = FONT_HEIGHT + 4;
+
+    // Draw header and footer
+    render_header(header_height);
+    render_footer(header_height);
+
+    // Draw text buffer contents below header
+    render_buffer(header_height);
+
+    // TODO: draw cursor here
+
+    // Swap buffers
+    swap_buffers();
+}
+
+// Render the window header (title bar)
+static void render_header(uint16_t header_height) {
+    uint32_t header_bg = 0x333333;
+    // Background
+    res_vg_draw_rectangle(0, 0, mode_info.XResolution, header_height, header_bg);
+
+    // Text "File" on left, 'X' on right
+    uint16_t  text_y        = (header_height - FONT_HEIGHT) / 2;
+    Character file_string[] = { CHAR_F, CHAR_i, CHAR_l, CHAR_e };
+
+    draw_string(5, text_y, 0xFFFFFF, file_string, 4);
+    draw_character(mode_info.XResolution - FONT_WIDTH - 5, text_y, 23, 0xFF0000);
+}
+
+// Render the window footer
+static void render_footer(uint16_t header_height) {
+    uint32_t footer_bg = 0x333333;
+    uint16_t y0        = mode_info.YResolution - header_height;
+    res_vg_draw_rectangle(0, y0, mode_info.XResolution, header_height, footer_bg);
+
+    // Draw cursor position (Ln, Col) on the left side
+    uint16_t text_y = y0 + (header_height - FONT_HEIGHT) / 2;
+    char     footer_text_string[32];
+    snprintf(
+        footer_text_string, sizeof(footer_text_string), "Ln %u, Col %u", text_buffer.cursor.line,
+        text_buffer.cursor.column
+    );
+
+    Character *footer_text_characters;
+    uint64_t   footer_text_length = strlen(footer_text_string);
+    if (string_to_characters(footer_text_string, footer_text_length, &footer_text_characters) == RES_OK) {
+        draw_string(5, text_y, 0xFFFFFF, footer_text_characters, footer_text_length);
+        free(footer_text_characters);
+    }
 }
