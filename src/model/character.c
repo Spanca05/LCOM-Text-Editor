@@ -1,5 +1,7 @@
-#include "character.h"
+#include <stdlib.h>
+
 #include "../utils/result.h"
+#include "character.h"
 #include "key.h"
 #include "modifiers.h"
 
@@ -16,50 +18,70 @@ Result key_to_character(Key key, Modifiers modifiers, Character *character, bool
 
     switch (key) {
     case KEY_a:
+        *textModifierUsed = true;
         switch (modifiers.textModifier) {
         case TEXT_MOD_ACUTE_ACCENT     : *character = capitalize ? CHAR_A_ACUTE : CHAR_a_ACUTE; break;
         case TEXT_MOD_GRAVE_ACCENT     : *character = capitalize ? CHAR_A_GRAVE : CHAR_a_GRAVE; break;
         case TEXT_MOD_CIRCUMFLEX_ACCENT: *character = capitalize ? CHAR_A_CIRC : CHAR_a_CIRC; break;
         case TEXT_MOD_TILL_ACCENT      : *character = capitalize ? CHAR_A_TILDE : CHAR_a_TILDE; break;
         case TEXT_MOD_UMLAUT           : *character = capitalize ? CHAR_A_UMLAUT : CHAR_a_UMLAUT; break;
-        default                        : *character = capitalize ? CHAR_A : CHAR_a; break;
+        default:
+            *character        = capitalize ? CHAR_A : CHAR_a;
+            *textModifierUsed = false;
+            break;
         }
         break;
     case KEY_e:
+        *textModifierUsed = true;
         switch (modifiers.textModifier) {
         case TEXT_MOD_ACUTE_ACCENT     : *character = capitalize ? CHAR_E_ACUTE : CHAR_e_ACUTE; break;
         case TEXT_MOD_GRAVE_ACCENT     : *character = capitalize ? CHAR_E_GRAVE : CHAR_e_GRAVE; break;
         case TEXT_MOD_CIRCUMFLEX_ACCENT: *character = capitalize ? CHAR_E_CIRC : CHAR_e_CIRC; break;
         case TEXT_MOD_UMLAUT           : *character = capitalize ? CHAR_E_UMLAUT : CHAR_e_UMLAUT; break;
-        default                        : *character = capitalize ? CHAR_E : CHAR_e; break;
+        default:
+            *character        = capitalize ? CHAR_E : CHAR_e;
+            *textModifierUsed = false;
+            break;
         }
         break;
     case KEY_i:
+        *textModifierUsed = true;
         switch (modifiers.textModifier) {
         case TEXT_MOD_ACUTE_ACCENT     : *character = capitalize ? CHAR_I_ACUTE : CHAR_i_ACUTE; break;
         case TEXT_MOD_GRAVE_ACCENT     : *character = capitalize ? CHAR_I_GRAVE : CHAR_i_GRAVE; break;
         case TEXT_MOD_CIRCUMFLEX_ACCENT: *character = capitalize ? CHAR_I_CIRC : CHAR_i_CIRC; break;
         case TEXT_MOD_UMLAUT           : *character = capitalize ? CHAR_I_UMLAUT : CHAR_i_UMLAUT; break;
-        default                        : *character = capitalize ? CHAR_I : CHAR_i; break;
+        default:
+            *character        = capitalize ? CHAR_I : CHAR_i;
+            *textModifierUsed = false;
+            break;
         }
         break;
     case KEY_o:
+        *textModifierUsed = true;
         switch (modifiers.textModifier) {
         case TEXT_MOD_ACUTE_ACCENT     : *character = capitalize ? CHAR_O_ACUTE : CHAR_o_ACUTE; break;
         case TEXT_MOD_GRAVE_ACCENT     : *character = capitalize ? CHAR_O_GRAVE : CHAR_o_GRAVE; break;
         case TEXT_MOD_CIRCUMFLEX_ACCENT: *character = capitalize ? CHAR_O_CIRC : CHAR_o_CIRC; break;
         case TEXT_MOD_TILL_ACCENT      : *character = capitalize ? CHAR_O_TILDE : CHAR_o_TILDE; break;
         case TEXT_MOD_UMLAUT           : *character = capitalize ? CHAR_O_UMLAUT : CHAR_o_UMLAUT; break;
-        default                        : *character = capitalize ? CHAR_O : CHAR_o; break;
+        default:
+            *character        = capitalize ? CHAR_O : CHAR_o;
+            *textModifierUsed = false;
+            break;
         }
         break;
     case KEY_u:
+        *textModifierUsed = true;
         switch (modifiers.textModifier) {
         case TEXT_MOD_ACUTE_ACCENT     : *character = capitalize ? CHAR_U_ACUTE : CHAR_u_ACUTE; break;
         case TEXT_MOD_GRAVE_ACCENT     : *character = capitalize ? CHAR_U_GRAVE : CHAR_u_GRAVE; break;
         case TEXT_MOD_CIRCUMFLEX_ACCENT: *character = capitalize ? CHAR_U_CIRC : CHAR_u_CIRC; break;
         case TEXT_MOD_UMLAUT           : *character = capitalize ? CHAR_U_UMLAUT : CHAR_u_UMLAUT; break;
-        default                        : *character = capitalize ? CHAR_U : CHAR_u; break;
+        default:
+            *character        = capitalize ? CHAR_U : CHAR_u;
+            *textModifierUsed = false;
+            break;
         }
         break;
 
@@ -103,7 +125,7 @@ Result key_to_character(Key key, Modifiers modifiers, Character *character, bool
     case KEY_TAB       : *character = CHAR_TAB; break;
     case KEY_SPACE     : *character = CHAR_SPACE; break;
     case KEY_APOSTROPHE: *character = modifiers.shift ? CHAR_QUESTION : CHAR_APOSTROPHE; break;
-    case KEY_QUOTE     : *character = modifiers.shift ? CHAR_EXCLAMATION : CHAR_1; break;
+    case KEY_QUOTE     : *character = modifiers.shift ? CHAR_RIGHT_ANGLE : CHAR_LEFT_ANGLE; break;
     case KEY_ORDINAL   : *character = modifiers.shift ? CHAR_FOI : CHAR_MOI; break;
     case KEY_ANGLE     : *character = modifiers.shift ? CHAR_GREATER : CHAR_LESS; break;
     case KEY_COMMA     : *character = modifiers.shift ? CHAR_SEMICOLON : CHAR_COMMA; break;
@@ -153,6 +175,109 @@ Character text_modifier_to_character(TextModifier textModifier) {
     case TEXT_MOD_UMLAUT           : return CHAR_TREMA;
     default                        : return CHAR_NONE;
     }
+}
+
+Result string_to_characters(char *string, uint64_t n, Character **characters) {
+    if (!string || !characters) return RES_INVALID_ARGUMENT;
+
+    *characters = (Character *)malloc(n * sizeof(Character));
+    if (!*characters) return RES_MEMORY_ERROR;
+
+    for (uint64_t i = 0; i < n; i++) {
+        switch (string[i]) {
+        case 'a' : (*characters)[i] = CHAR_a; break;
+        case 'b' : (*characters)[i] = CHAR_b; break;
+        case 'c' : (*characters)[i] = CHAR_c; break;
+        case 'd' : (*characters)[i] = CHAR_d; break;
+        case 'e' : (*characters)[i] = CHAR_e; break;
+        case 'f' : (*characters)[i] = CHAR_f; break;
+        case 'g' : (*characters)[i] = CHAR_g; break;
+        case 'h' : (*characters)[i] = CHAR_h; break;
+        case 'i' : (*characters)[i] = CHAR_i; break;
+        case 'j' : (*characters)[i] = CHAR_j; break;
+        case 'k' : (*characters)[i] = CHAR_k; break;
+        case 'l' : (*characters)[i] = CHAR_l; break;
+        case 'm' : (*characters)[i] = CHAR_m; break;
+        case 'n' : (*characters)[i] = CHAR_n; break;
+        case 'o' : (*characters)[i] = CHAR_o; break;
+        case 'p' : (*characters)[i] = CHAR_p; break;
+        case 'q' : (*characters)[i] = CHAR_q; break;
+        case 'r' : (*characters)[i] = CHAR_r; break;
+        case 's' : (*characters)[i] = CHAR_s; break;
+        case 't' : (*characters)[i] = CHAR_t; break;
+        case 'u' : (*characters)[i] = CHAR_u; break;
+        case 'v' : (*characters)[i] = CHAR_v; break;
+        case 'w' : (*characters)[i] = CHAR_w; break;
+        case 'x' : (*characters)[i] = CHAR_x; break;
+        case 'y' : (*characters)[i] = CHAR_y; break;
+        case 'z' : (*characters)[i] = CHAR_z; break;
+        case 'A' : (*characters)[i] = CHAR_A; break;
+        case 'B' : (*characters)[i] = CHAR_B; break;
+        case 'C' : (*characters)[i] = CHAR_C; break;
+        case 'D' : (*characters)[i] = CHAR_D; break;
+        case 'E' : (*characters)[i] = CHAR_E; break;
+        case 'F' : (*characters)[i] = CHAR_F; break;
+        case 'G' : (*characters)[i] = CHAR_G; break;
+        case 'H' : (*characters)[i] = CHAR_H; break;
+        case 'I' : (*characters)[i] = CHAR_I; break;
+        case 'J' : (*characters)[i] = CHAR_J; break;
+        case 'K' : (*characters)[i] = CHAR_K; break;
+        case 'L' : (*characters)[i] = CHAR_L; break;
+        case 'M' : (*characters)[i] = CHAR_M; break;
+        case 'N' : (*characters)[i] = CHAR_N; break;
+        case 'O' : (*characters)[i] = CHAR_O; break;
+        case 'P' : (*characters)[i] = CHAR_P; break;
+        case 'Q' : (*characters)[i] = CHAR_Q; break;
+        case 'R' : (*characters)[i] = CHAR_R; break;
+        case 'S' : (*characters)[i] = CHAR_S; break;
+        case 'T' : (*characters)[i] = CHAR_T; break;
+        case 'U' : (*characters)[i] = CHAR_U; break;
+        case 'V' : (*characters)[i] = CHAR_V; break;
+        case 'W' : (*characters)[i] = CHAR_W; break;
+        case 'X' : (*characters)[i] = CHAR_X; break;
+        case 'Y' : (*characters)[i] = CHAR_Y; break;
+        case 'Z' : (*characters)[i] = CHAR_Z; break;
+        case '1' : (*characters)[i] = CHAR_1; break;
+        case '2' : (*characters)[i] = CHAR_2; break;
+        case '3' : (*characters)[i] = CHAR_3; break;
+        case '4' : (*characters)[i] = CHAR_4; break;
+        case '5' : (*characters)[i] = CHAR_5; break;
+        case '6' : (*characters)[i] = CHAR_6; break;
+        case '7' : (*characters)[i] = CHAR_7; break;
+        case '8' : (*characters)[i] = CHAR_8; break;
+        case '9' : (*characters)[i] = CHAR_9; break;
+        case '0' : (*characters)[i] = CHAR_0; break;
+        case ' ' : (*characters)[i] = CHAR_SPACE; break;
+        case '\n': (*characters)[i] = CHAR_NEWLINE; break;
+        case ',' : (*characters)[i] = CHAR_COMMA; break;
+        case '.' : (*characters)[i] = CHAR_DOT; break;
+        case '-' : (*characters)[i] = CHAR_MINUS; break;
+        case '+' : (*characters)[i] = CHAR_PLUS; break;
+        case '_' : (*characters)[i] = CHAR_UNDERSCORE; break;
+        case ':' : (*characters)[i] = CHAR_COLON; break;
+        case ';' : (*characters)[i] = CHAR_SEMICOLON; break;
+        case '!' : (*characters)[i] = CHAR_EXCLAMATION; break;
+        case '?' : (*characters)[i] = CHAR_QUESTION; break;
+        case '@' : (*characters)[i] = CHAR_AT; break;
+        case '#' : (*characters)[i] = CHAR_HASH; break;
+        case '$' : (*characters)[i] = CHAR_DOLLAR; break;
+        case '%' : (*characters)[i] = CHAR_PERCENT; break;
+        case '&' : (*characters)[i] = CHAR_AMPERSAND; break;
+        case '/' : (*characters)[i] = CHAR_SLASH; break;
+        case '(' : (*characters)[i] = CHAR_LPAREN; break;
+        case ')' : (*characters)[i] = CHAR_RPAREN; break;
+        case '=' : (*characters)[i] = CHAR_EQUAL; break;
+        case '<' : (*characters)[i] = CHAR_LESS; break;
+        case '>' : (*characters)[i] = CHAR_GREATER; break;
+        case '|' : (*characters)[i] = CHAR_PIPE; break;
+        case '\\': (*characters)[i] = CHAR_BACKSLASH; break;
+        case '\'': (*characters)[i] = CHAR_APOSTROPHE; break;
+        case '"' : (*characters)[i] = CHAR_QUOTE; break;
+        default  : (*characters)[i] = CHAR_NONE; break;
+        }
+    }
+
+    return RES_OK;
 }
 
 const char *character_names[] = {
