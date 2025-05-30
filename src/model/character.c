@@ -18,50 +18,70 @@ Result key_to_character(Key key, Modifiers modifiers, Character *character, bool
 
     switch (key) {
     case KEY_a:
+        *textModifierUsed = true;
         switch (modifiers.textModifier) {
         case TEXT_MOD_ACUTE_ACCENT     : *character = capitalize ? CHAR_A_ACUTE : CHAR_a_ACUTE; break;
         case TEXT_MOD_GRAVE_ACCENT     : *character = capitalize ? CHAR_A_GRAVE : CHAR_a_GRAVE; break;
         case TEXT_MOD_CIRCUMFLEX_ACCENT: *character = capitalize ? CHAR_A_CIRC : CHAR_a_CIRC; break;
         case TEXT_MOD_TILL_ACCENT      : *character = capitalize ? CHAR_A_TILDE : CHAR_a_TILDE; break;
         case TEXT_MOD_UMLAUT           : *character = capitalize ? CHAR_A_UMLAUT : CHAR_a_UMLAUT; break;
-        default                        : *character = capitalize ? CHAR_A : CHAR_a; break;
+        default:
+            *character        = capitalize ? CHAR_A : CHAR_a;
+            *textModifierUsed = false;
+            break;
         }
         break;
     case KEY_e:
+        *textModifierUsed = true;
         switch (modifiers.textModifier) {
         case TEXT_MOD_ACUTE_ACCENT     : *character = capitalize ? CHAR_E_ACUTE : CHAR_e_ACUTE; break;
         case TEXT_MOD_GRAVE_ACCENT     : *character = capitalize ? CHAR_E_GRAVE : CHAR_e_GRAVE; break;
         case TEXT_MOD_CIRCUMFLEX_ACCENT: *character = capitalize ? CHAR_E_CIRC : CHAR_e_CIRC; break;
         case TEXT_MOD_UMLAUT           : *character = capitalize ? CHAR_E_UMLAUT : CHAR_e_UMLAUT; break;
-        default                        : *character = capitalize ? CHAR_E : CHAR_e; break;
+        default:
+            *character        = capitalize ? CHAR_E : CHAR_e;
+            *textModifierUsed = false;
+            break;
         }
         break;
     case KEY_i:
+        *textModifierUsed = true;
         switch (modifiers.textModifier) {
         case TEXT_MOD_ACUTE_ACCENT     : *character = capitalize ? CHAR_I_ACUTE : CHAR_i_ACUTE; break;
         case TEXT_MOD_GRAVE_ACCENT     : *character = capitalize ? CHAR_I_GRAVE : CHAR_i_GRAVE; break;
         case TEXT_MOD_CIRCUMFLEX_ACCENT: *character = capitalize ? CHAR_I_CIRC : CHAR_i_CIRC; break;
         case TEXT_MOD_UMLAUT           : *character = capitalize ? CHAR_I_UMLAUT : CHAR_i_UMLAUT; break;
-        default                        : *character = capitalize ? CHAR_I : CHAR_i; break;
+        default:
+            *character        = capitalize ? CHAR_I : CHAR_i;
+            *textModifierUsed = false;
+            break;
         }
         break;
     case KEY_o:
+        *textModifierUsed = true;
         switch (modifiers.textModifier) {
         case TEXT_MOD_ACUTE_ACCENT     : *character = capitalize ? CHAR_O_ACUTE : CHAR_o_ACUTE; break;
         case TEXT_MOD_GRAVE_ACCENT     : *character = capitalize ? CHAR_O_GRAVE : CHAR_o_GRAVE; break;
         case TEXT_MOD_CIRCUMFLEX_ACCENT: *character = capitalize ? CHAR_O_CIRC : CHAR_o_CIRC; break;
         case TEXT_MOD_TILL_ACCENT      : *character = capitalize ? CHAR_O_TILDE : CHAR_o_TILDE; break;
         case TEXT_MOD_UMLAUT           : *character = capitalize ? CHAR_O_UMLAUT : CHAR_o_UMLAUT; break;
-        default                        : *character = capitalize ? CHAR_O : CHAR_o; break;
+        default:
+            *character        = capitalize ? CHAR_O : CHAR_o;
+            *textModifierUsed = false;
+            break;
         }
         break;
     case KEY_u:
+        *textModifierUsed = true;
         switch (modifiers.textModifier) {
         case TEXT_MOD_ACUTE_ACCENT     : *character = capitalize ? CHAR_U_ACUTE : CHAR_u_ACUTE; break;
         case TEXT_MOD_GRAVE_ACCENT     : *character = capitalize ? CHAR_U_GRAVE : CHAR_u_GRAVE; break;
         case TEXT_MOD_CIRCUMFLEX_ACCENT: *character = capitalize ? CHAR_U_CIRC : CHAR_u_CIRC; break;
         case TEXT_MOD_UMLAUT           : *character = capitalize ? CHAR_U_UMLAUT : CHAR_u_UMLAUT; break;
-        default                        : *character = capitalize ? CHAR_U : CHAR_u; break;
+        default:
+            *character        = capitalize ? CHAR_U : CHAR_u;
+            *textModifierUsed = false;
+            break;
         }
         break;
 

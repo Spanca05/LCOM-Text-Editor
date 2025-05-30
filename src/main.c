@@ -2,6 +2,7 @@
 #include <minix/drivers.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include "drivers/graphics.h"
 #include "drivers/keyboard.h"
@@ -121,6 +122,10 @@ void handle_keyboard_interrupt() {
         case KEY_ARROW_RIGHT:
             if (isPressCode) update_cursor(key);
             break;
+
+        case KEY_BACKSPACE:
+            if (isPressCode) remove_character_from_buffer();
+            break;
         default: break;
         }
 
@@ -171,23 +176,21 @@ void handle_keyboard_interrupt() {
 
     // If a text modifier exits and was not used
     // Add it to the buffer and clear it
-    if (modifiers.textModifier != TEXT_MOD_NONE && !textModifierUsed) {
+    if (modifiers.textModifier != TEXT_MOD_NONE && !textModifierUsed)
         add_character_to_buffer(text_modifier_to_character(modifiers.textModifier));
-        modifiers.textModifier = TEXT_MOD_NONE;
-    }
+    modifiers.textModifier = TEXT_MOD_NONE;
 
     // If a text modifier exits and the key was a space
     // Add only the text modifier to the buffer
     if (modifiers.textModifier != TEXT_MOD_NONE && character == CHAR_SPACE) return;
 
     // Add character to the buffer
-    printf("Adding character: %s\n", character_names[character]);
     add_character_to_buffer(character);
 }
 
 void render_screen() {
     // Clear screen to grey
-    res_vg_draw_rectangle(0, 0, mode_info.XResolution, mode_info.YResolution, 0xCCCCCC);
+    res_vg_draw_rectangle(0, 0, mode_info.XResolution, mode_info.YResolution, 0x272A32);
 
     // Header and footer heights
     uint16_t header_height = FONT_HEIGHT + 4;
@@ -207,7 +210,7 @@ void render_screen() {
 
 // Render the window header (title bar)
 static void render_header(uint16_t header_height) {
-    uint32_t header_bg = 0x333333;
+    uint32_t header_bg = 0x171A22;
     // Background
     res_vg_draw_rectangle(0, 0, mode_info.XResolution, header_height, header_bg);
 
@@ -216,12 +219,13 @@ static void render_header(uint16_t header_height) {
     Character file_string[] = { CHAR_F, CHAR_i, CHAR_l, CHAR_e };
 
     draw_string(5, text_y, 0xFFFFFF, file_string, 4);
-    draw_character(mode_info.XResolution - FONT_WIDTH - 5, text_y, 23, 0xFF0000);
+    res_vg_draw_rectangle(mode_info.XResolution - FONT_WIDTH * 2, 0, FONT_WIDTH * 2, header_height, 0xDD1F1F);
+    draw_character(mode_info.XResolution - FONT_WIDTH * 1.5, text_y, CHAR_X, 0xFFFFFF);
 }
 
 // Render the window footer
 static void render_footer(uint16_t header_height) {
-    uint32_t footer_bg = 0x333333;
+    uint32_t footer_bg = 0x171A22;
     uint16_t y0        = mode_info.YResolution - header_height;
     res_vg_draw_rectangle(0, y0, mode_info.XResolution, header_height, footer_bg);
 

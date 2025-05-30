@@ -17,5 +17,11 @@ Result render_buffer(uint16_t y_offset) {
             draw_character(x, y, line->data[col], 0xFFFFFF);
         }
     }
+
+    if (text_buffer.cursor.visible)
+        res_vg_draw_rectangle(
+            (text_buffer.cursor.column - 1) * FONT_WIDTH, y_offset + text_buffer.cursor.line - 1, FONT_WIDTH,
+            FONT_HEIGHT, 0xFFFFFF
+        );
     return RES_OK;
 }

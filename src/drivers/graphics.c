@@ -2,8 +2,8 @@
 #include "../utils/result.h"
 #include <lcom/lcf.h>
 #include <lcom/video_gr.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 // Global variable to store VBE mode information
 vbe_mode_info_t mode_info;
@@ -119,21 +119,31 @@ Result res_normalize_color(uint32_t *color) {
     }
 
     // Direct color
-    uint32_t color_copy = *color;
-    uint32_t r          = (color_copy >> mode_info.RedFieldPosition) & ((1 << mode_info.RedMaskSize) - 1);
-    uint32_t g          = (color_copy >> mode_info.GreenFieldPosition) & ((1 << mode_info.GreenMaskSize) - 1);
-    uint32_t b          = (color_copy >> mode_info.BlueFieldPosition) & ((1 << mode_info.BlueMaskSize) - 1);
+    uint32_t r = (*color >> 16) & 0xFF; // Extract red component
+    uint32_t g = (*color >> 8) & 0xFF;  // Extract green component
+    uint32_t b = *color & 0xFF;         // Extract blue component
+
+    r = (r >> (8 - mode_info.RedMaskSize)) & ((1 << mode_info.RedMaskSize) - 1);
+    g = (g >> (8 - mode_info.GreenMaskSize)) & ((1 << mode_info.GreenMaskSize) - 1);
+    b = (b >> (8 - mode_info.BlueMaskSize)) & ((1 << mode_info.BlueMaskSize) - 1);
+
     *color
         = (r << mode_info.RedFieldPosition) | (g << mode_info.GreenFieldPosition) | (b << mode_info.BlueFieldPosition);
+
     return RES_OK;
 }
 
 Result res_vg_draw_pixel(uint16_t x, uint16_t y, uint32_t color) {
     if (x >= h_res || y >= v_res) return RES_INVALID_ARGUMENT;
+
     uint8_t  bytes_per_pixel = (bits_per_pixel + 7) / 8;
     uint32_t index           = (y * h_res + x) * bytes_per_pixel;
+
     res_normalize_color(&color);
-    if (memcpy((uint8_t *)video_back_buffer + index, &color, bytes_per_pixel) == NULL) return RES_MEMORY_ERROR;
+
+    uint8_t *buffer = (uint8_t *)video_back_buffer;
+    for (uint8_t i = 0; i < bytes_per_pixel; i++) buffer[index + i] = (color >> (i * 8)) & 0xFF;
+    
     return RES_OK;
 }
 

@@ -71,4 +71,6 @@ Result update_cursor(Key key);
  */
 void add_character_to_buffer(Character character);
 
+void remove_character_from_buffer();
+
 #endif // BUFFER_H
