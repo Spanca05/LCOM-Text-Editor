@@ -1,24 +1,29 @@
 #include <lcom/lcf.h>
-#include <lcom/video_gr.h>
-#include <stdbool.h>
+#include <minix/drivers.h>
+#include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 
-#include "drivers/VBE.h"
-#include "drivers/graphics.h"
-#include "drivers/i8042.h"
-#include "drivers/i8254.h"
 #include "drivers/keyboard.h"
-#include "drivers/timer.h"
+#include "drivers/management.h"
+#include "model/buffer.h"
+#include "model/character.h"
+#include "model/cursor-rato.h"
+#include "model/key.h"
+#include "model/modifiers.h"
+#include "utils/result.h"
 
-static uint8_t kbd_bit;
+// Function definitions
+void handle_timer_interrupts();
+void handle_keyboard_interrupt();
+
+// Drivers Info
 static uint8_t timer_bit;
-static void   *video_mem = NULL;
+static uint8_t kbd_bit;
 
-bool handle_keyboard(uint16_t scancode);
-void render_screen();
+// Text Editor State
+static Modifiers modifiers;
 
+// LCF Setup
 int main(int argc, char *argv[]) {
     // Initialize LCF and Minix framework
     lcf_set_language("EN-US");
@@ -26,77 +31,150 @@ int main(int argc, char *argv[]) {
     return EXIT_SUCCESS;
 }
 
-void cleanup() {
-    res_timer_unsubscribe_int();
-    keyboard_unsubscribe_int();
-    if (set_text_mode() != RES_OK) fprintf(stderr, "Failed to restore text mode\n");
-}
-
-void setup_graphics() {
-    // Set graphics mode and map video memory
-    if (set_graphic_mode(VBE_1024P_DC) != RES_OK) {
-        fprintf(stderr, "Failed to set graphics mode\n");
-        cleanup();
-        exit(EXIT_FAILURE);
-    }
-
-    if (res_vg_init(VBE_1024P_DC, &video_mem) != RES_OK) {
-        fprintf(stderr, "Failed to map video memory\n");
-        cleanup();
-        exit(EXIT_FAILURE);
-    }
-}
-
-void subscribe_to_devices() {
-    // Subscribe timer interrupts
-    if (res_timer_subscribe_int(&timer_bit) != RES_OK) {
-        fprintf(stderr, "Failed to subscribe timer\n");
-        cleanup();
-        exit(EXIT_FAILURE);
-    }
-
-    // Subscribe keyboard interrupts
-    if (keyboard_subscribe_int(&kbd_bit) != RES_OK) {
-        fprintf(stderr, "Failed to subscribe keyboard\n");
-        cleanup();
-        exit(EXIT_FAILURE);
-    }
-}
-
+// Program Loop
 int(proj_main_loop)(int argc, char *argv[]) {
-    setup_graphics();
-    subscribe_to_devices();
+    // Init drivers
+    // setup_graphics();
+    subscribe_to_devices(&timer_bit, &kbd_bit);
 
+    // Init program state
+    init_buffer();
+    modifiers.caps_lock    = false;
+    modifiers.ctrl         = false;
+    modifiers.lalt         = false;
+    modifiers.ralt         = false;
+    modifiers.shift        = false;
+    modifiers.textModifier = TEXT_MOD_NONE;
+
+
+    // Main event loop
     bool    running = true;
     int     ipc_status;
     message msg;
-
-    // Main event loop
     while (running) {
         if (driver_receive(ANY, &msg, &ipc_status) != OK) continue;
         if (is_ipc_notify(ipc_status) && _ENDPOINT_P(msg.m_source) == HARDWARE) {
             uint32_t irq_set = msg.m_notify.interrupts;
 
-            if (irq_set & BIT(timer_bit)) {}
+            // Timer interrupts
+            if (irq_set & timer_bit) handle_timer_interrupts();
 
-            if (irq_set & BIT(kbd_bit)) {
-                uint16_t scancode;
-                keyboard_ih(&scancode);
-                printf("%d", scancode);
-                if (scancode == BREAK_ESC) running = false;
-            }
+            // Keyboard interrupts
+            if (irq_set & kbd_bit) handle_keyboard_interrupt();
         }
 
-        render_screen();
+        // Clear the screen
+        printf("\033[2J\033[H");
+        print_buffer_state(modifiers);
     }
 
     // Cleanup and restore text mode
-    cleanup();
-    return RES_OK;
+    drivers_cleanup();
+    return 0;
 }
 
-void render_screen() {
-    // Clear screen to light grey
-    res_vg_draw_rectangle(0, 0, mode_info.XResolution, mode_info.YResolution, 0xCCCCCC);
-    // TODO: draw text buffer and cursor here using vg_draw_pixel or custom font routines
+// Timer Interrupt Handler
+void handle_timer_interrupts() {
+    tick_cursor();
+    // TODO Handle timer interrupts
+}
+
+// Keyboard Interrupt Handler
+void handle_keyboard_interrupt() {
+    Result    result;
+    uint16_t  scancode;
+    Key       key;
+    bool      isPressCode;
+    Character character;
+    bool      textModifierUsed;
+
+    // Handle the keyboard and get the scancode
+    if (keyboard_ih(&scancode)) return;
+
+    // Convert the scan code into a Key
+    result = scancode_to_key(scancode, &key, &isPressCode);
+    if (result == RES_UNIMPLEMENTED) printf("Unimplemented KeyCode: 0x%X\n", scancode);
+    if (result != RES_OK) return;
+
+    // Handle non-printable (non-text) keys
+    if (!key_is_printable(key)) {
+        switch (key) {
+        case KEY_CAPSLOCK:
+            if (!isPressCode) modifiers.caps_lock ^= 1;
+            break;
+
+        case KEY_LCTRL:
+        case KEY_RCTRL : modifiers.ctrl = isPressCode; break;
+        case KEY_LSHIFT:
+        case KEY_RSHIFT: modifiers.shift = isPressCode; break;
+        case KEY_LALT  : modifiers.lalt = isPressCode; break;
+        case KEY_RALT  : modifiers.ralt = isPressCode; break;
+
+        case KEY_ARROW_UP:
+        case KEY_ARROW_DOWN:
+        case KEY_ARROW_LEFT:
+        case KEY_ARROW_RIGHT:
+            if (isPressCode) update_cursor(key);
+            break;
+        default: break;
+        }
+
+        // TODO Implement non printable key code
+        return;
+    }
+
+    // Handle ctrl key-binds
+    if (modifiers.ctrl) {
+        // TODO Implement CTRL key-binds
+        return;
+    }
+
+    // Handle left alt key-binds
+    if (modifiers.lalt) {
+        // TODO Implement Left ALT key-binds
+        return;
+    }
+
+    // Map key + modifiers to character
+    result = key_to_character(key, modifiers, &character, &textModifierUsed);
+    if (result == RES_DOES_NOT_EXIST) return;
+    if (result != RES_OK) return;
+
+    // Handle when character is a text modifier
+    if (character_is_text_modifier(character)) {
+        // Ignore pressing, only releasing is important
+        if (isPressCode) return;
+
+        TextModifier newTextModifier = character_to_text_modifier(character);
+        // Print and clear if double click
+        if (modifiers.textModifier == newTextModifier) {
+            add_character_to_buffer(character);
+            modifiers.textModifier = TEXT_MOD_NONE;
+        }
+
+        // Print old modifier and update
+        else {
+            Character oldModifier = text_modifier_to_character(modifiers.textModifier);
+            if (oldModifier != TEXT_MOD_NONE) add_character_to_buffer(oldModifier);
+            modifiers.textModifier = newTextModifier;
+        }
+        return;
+    }
+
+    // Ignore release events
+    if (!isPressCode) return;
+
+    // If a text modifier exits and was not used
+    // Add it to the buffer and clear it
+    if (modifiers.textModifier != TEXT_MOD_NONE && !textModifierUsed) {
+        add_character_to_buffer(text_modifier_to_character(modifiers.textModifier));
+        modifiers.textModifier = TEXT_MOD_NONE;
+    }
+
+    // If a text modifier exits and the key was a space
+    // Add only the text modifier to the buffer
+    if (modifiers.textModifier != TEXT_MOD_NONE && character == CHAR_SPACE) return;
+
+    // Add character to the buffer
+    add_character_to_buffer(character);
 }
