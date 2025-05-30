@@ -17,8 +17,11 @@
 #include "utils/result.h"
 #include "model/directory.h"
 
-// Files directory path
+// Files directory path and menu buffer
 const char *FILES_DIRECTORY = "./src/Files";
+char menu_buffer[2048];
+char* filenames[2048];
+int num_files = 0;
 
 // Function definitions
 void        handle_timer_interrupts();
@@ -284,4 +287,11 @@ static void render_footer(uint16_t header_height) {
         draw_string(5, text_y, 0xFFFFFF, footer_text_characters, footer_text_length);
         free(footer_text_characters);
     }
+}
+
+void render_menu(char *path, char *buffer, char *filenames[], int *num_files) {
+    if (path == NULL || buffer == NULL || filenames == NULL) return RES_INVALID_ARGUMENT;
+
+    render_directory(path, filenames, num_files);
+    return RES_OK;
 }

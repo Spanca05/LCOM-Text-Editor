@@ -60,3 +60,25 @@ Result(delete_file)(char *path, char *file_name) {
     free(full_path);
     return RES_OK;
 }
+
+Result(create_menu)(char* buffer, char* filenames[], int *num_files) {
+    if (buffer == NULL || filenames == NULL || num_files == NULL) return RES_INVALID_ARGUMENT;
+
+    strcat(buffer, "Files: \n");
+    if (*num_files == 0)
+    {
+        strcat(buffer, "\tThere are no files available.");
+    }
+    else if (*num_files > 0)
+    {
+        for (int i = 0; i < *num_files; i++) {
+            char line[128];
+            snprintf(line, sizeof(line), "\t%d) %s\n", i + 1, filenames[i]);
+            strcat(buffer, line);
+        }
+    }
+    
+    strcat(buffer, "Create a new one!");
+
+    return RES_OK;
+}
