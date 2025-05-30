@@ -5,6 +5,8 @@ PROG=proj
 .PATH: ${.CURDIR}/src/utils
 .PATH: ${.CURDIR}/src/drivers
 .PATH: ${.CURDIR}/src/model
+.PATH: ${.CURDIR}/src/directory
+.PATH: ${.CURDIR}/src/files
 
 # source code files to be compiled
 SRCS = main.c \
@@ -17,7 +19,8 @@ SRCS = main.c \
 		utils.c \
 		key.c \
 		character.c \
-		buffer.c
+		buffer.c \
+		directory.c
 
 # additional compilation flags
 # "-Wall -Wextra -Werror -I . -std=c11 -Wno-unused-parameter" are already set
