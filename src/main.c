@@ -30,6 +30,7 @@ static uint8_t kbd_bit;
 
 // Text Editor State
 static Modifiers modifiers;
+static bool      running;
 
 // LCF Setup
 int main(int argc, char *argv[]) {
@@ -56,7 +57,7 @@ int(proj_main_loop)(int argc, char *argv[]) {
     modifiers.textModifier = TEXT_MOD_NONE;
 
     // Main event loop
-    bool    running = true;
+    running = true;
     int     ipc_status;
     message msg;
     while (running) {
@@ -105,6 +106,9 @@ void handle_keyboard_interrupt() {
     // Handle non-printable (non-text) keys
     if (!key_is_printable(key)) {
         switch (key) {
+        case KEY_ESC:
+            if (!isPressCode) running = false;
+            break;
         case KEY_CAPSLOCK:
             if (!isPressCode) modifiers.caps_lock ^= 1;
             break;
@@ -126,10 +130,12 @@ void handle_keyboard_interrupt() {
         case KEY_BACKSPACE:
             if (isPressCode) remove_character_from_buffer();
             break;
+        case KEY_ENTER:
+            if (isPressCode) add_new_line_to_buffer();
+            break;
         default: break;
         }
 
-        // TODO Implement non printable key code
         return;
     }
 
@@ -178,16 +184,17 @@ void handle_keyboard_interrupt() {
     // Add it to the buffer and clear it
     if (modifiers.textModifier != TEXT_MOD_NONE && !textModifierUsed)
         add_character_to_buffer(text_modifier_to_character(modifiers.textModifier));
-    modifiers.textModifier = TEXT_MOD_NONE;
 
     // If a text modifier exits and the key was a space
     // Add only the text modifier to the buffer
     if (modifiers.textModifier != TEXT_MOD_NONE && character == CHAR_SPACE) return;
+    modifiers.textModifier = TEXT_MOD_NONE;
 
     // Add character to the buffer
     add_character_to_buffer(character);
 }
 
+// Render the text editor main window
 void render_screen() {
     // Clear screen to grey
     res_vg_draw_rectangle(0, 0, mode_info.XResolution, mode_info.YResolution, 0x272A32);
@@ -201,8 +208,6 @@ void render_screen() {
 
     // Draw text buffer contents below header
     render_buffer(header_height);
-
-    // TODO: draw cursor here
 
     // Swap buffers
     swap_buffers();
@@ -233,7 +238,7 @@ static void render_footer(uint16_t header_height) {
     uint16_t text_y = y0 + (header_height - FONT_HEIGHT) / 2;
     char     footer_text_string[32];
     snprintf(
-        footer_text_string, sizeof(footer_text_string), "Ln %u, Col %u", text_buffer.cursor.line,
+        footer_text_string, sizeof(footer_text_string), "Ln %llu, Col %llu", text_buffer.cursor.line,
         text_buffer.cursor.column
     );
 

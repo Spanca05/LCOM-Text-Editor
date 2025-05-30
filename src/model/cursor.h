@@ -7,10 +7,10 @@
 #include "key.h"
 
 typedef struct Cursor {
-    int  column;
-    int  line;
-    int  counter;
-    bool visible;
+    uint64_t column;
+    uint64_t line;
+    uint64_t counter;
+    bool     visible;
 } Cursor;
 
 void tick_cursor(Cursor *cursor);

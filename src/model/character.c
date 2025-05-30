@@ -125,7 +125,7 @@ Result key_to_character(Key key, Modifiers modifiers, Character *character, bool
     case KEY_TAB       : *character = CHAR_TAB; break;
     case KEY_SPACE     : *character = CHAR_SPACE; break;
     case KEY_APOSTROPHE: *character = modifiers.shift ? CHAR_QUESTION : CHAR_APOSTROPHE; break;
-    case KEY_QUOTE     : *character = modifiers.shift ? CHAR_EXCLAMATION : CHAR_1; break;
+    case KEY_QUOTE     : *character = modifiers.shift ? CHAR_RIGHT_ANGLE : CHAR_LEFT_ANGLE; break;
     case KEY_ORDINAL   : *character = modifiers.shift ? CHAR_FOI : CHAR_MOI; break;
     case KEY_ANGLE     : *character = modifiers.shift ? CHAR_GREATER : CHAR_LESS; break;
     case KEY_COMMA     : *character = modifiers.shift ? CHAR_SEMICOLON : CHAR_COMMA; break;

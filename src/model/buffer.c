@@ -129,3 +129,28 @@ void remove_character_from_buffer() {
     // Update cursor position
     text_buffer.cursor.column--;
 }
+
+void add_new_line_to_buffer() {
+    Result result;
+
+    result = add_line_at(text_buffer.cursor.line + 1);
+    if (result != RES_OK) return;
+
+    // If cursor is in the middle of the line
+    if (text_buffer.cursor.column <= text_buffer.lines[text_buffer.cursor.line - 1].length) {
+        // Copy characters from the current line to the new line
+        Line *current_line = &text_buffer.lines[text_buffer.cursor.line - 1];
+        Line *new_line = &text_buffer.lines[text_buffer.cursor.line];
+
+        for (size_t i = text_buffer.cursor.column - 1; i < current_line->length; i++) 
+            add_character_at(new_line, current_line->data[i], new_line->length + 1);
+        
+
+        // Remove characters from the current line after the cursor
+        current_line->length = text_buffer.cursor.column - 1;
+    }
+
+    // Update cursor position
+    text_buffer.cursor.line++;
+    text_buffer.cursor.column = 1;
+}
