@@ -16,7 +16,7 @@ SRCS = main.c \
 		mouse.c \
 		graphics.c \
 		utils.c \
-		font8x16.c \
+		font16x32.c \
 		text_renderer.c \
 		backbuffer.c \
 		text_buffer.c
