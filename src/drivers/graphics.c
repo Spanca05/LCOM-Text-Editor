@@ -11,8 +11,8 @@ vbe_mode_info_t mode_info;
 // Pointers and variables to store video memory and resolution details
 static void    *video_buffer      = NULL;
 static void    *video_back_buffer = NULL;
-static uint16_t h_res;
-static uint16_t v_res;
+uint16_t        h_res;
+uint16_t        v_res;
 static uint8_t  bits_per_pixel;
 static uint32_t fb_size = 0;
 
@@ -143,7 +143,7 @@ Result res_vg_draw_pixel(uint16_t x, uint16_t y, uint32_t color) {
 
     uint8_t *buffer = (uint8_t *)video_back_buffer;
     for (uint8_t i = 0; i < bytes_per_pixel; i++) buffer[index + i] = (color >> (i * 8)) & 0xFF;
-    
+
     return RES_OK;
 }
 

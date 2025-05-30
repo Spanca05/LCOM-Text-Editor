@@ -249,9 +249,9 @@ static void render_header(uint16_t header_height) {
 
     // Text "File" on left, 'X' on right
     uint16_t  text_y        = (header_height - FONT_HEIGHT) / 2;
-    Character file_string[] = { CHAR_F, CHAR_i, CHAR_l, CHAR_e };
+    Character file_string[] = { CHAR_N, CHAR_o, CHAR_t, CHAR_e, CHAR_s };
 
-    draw_string(5, text_y, 0xFFFFFF, file_string, 4);
+    draw_string(5, text_y, 0xFFFFFF, file_string, 5);
     res_vg_draw_rectangle(mode_info.XResolution - FONT_WIDTH * 2, 0, FONT_WIDTH * 2, header_height, 0xDD1F1F);
     draw_character(mode_info.XResolution - FONT_WIDTH * 1.5, text_y, CHAR_X, 0xFFFFFF);
 }
