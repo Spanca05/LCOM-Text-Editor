@@ -7,6 +7,9 @@ PROG=proj
 .PATH: ${.CURDIR}/src/model
 .PATH: ${.CURDIR}/src/directory
 .PATH: ${.CURDIR}/src/files
+.PATH: ${.CURDIR}/src/graphics
+.PATH: ${.CURDIR}/src/buffer
+ 
 
 # source code files to be compiled
 SRCS = main.c \
@@ -20,7 +23,11 @@ SRCS = main.c \
 		key.c \
 		character.c \
 		buffer.c \
-		directory.c
+		directory.c \
+		font16x32.c \
+		text_renderer.c \
+		backbuffer.c \
+		text_buffer.c
 
 # additional compilation flags
 # "-Wall -Wextra -Werror -I . -std=c11 -Wno-unused-parameter" are already set

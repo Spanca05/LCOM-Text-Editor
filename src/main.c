@@ -22,6 +22,27 @@ static uint8_t kbd_bit;
 
 // Text Editor State
 static Modifiers modifiers;
+#include "buffer/text_buffer.h"
+#include "drivers/VBE.h"
+#include "drivers/backbuffer.h"
+#include "drivers/graphics.h"
+#include "drivers/i8042.h"
+#include "drivers/i8254.h"
+#include "drivers/keyboard.h"
+#include "drivers/timer.h"
+#include "graphics/font16x32.h"
+#include "graphics/text_renderer.h"
+
+static uint8_t kbd_bit;
+// static uint8_t timer_bit;  // no longer using timer for auto-repeat
+// static void   *video_mem   = NULL;
+static void   *back_buffer = NULL;
+
+static TextBuffer tb; // persistent text buffer
+
+bool handle_keyboard(uint16_t scancode);
+void render_screen(void);
+void test_text_buffer(void);
 
 // LCF Setup
 int main(int argc, char *argv[]) {
@@ -32,10 +53,67 @@ int main(int argc, char *argv[]) {
 }
 
 // Program Loop
+void cleanup() {
+    keyboard_unsubscribe_int();
+    if (set_text_mode() != RES_OK) fprintf(stderr, "Failed to restore text mode\n");
+}
+
+void setup_graphics() {
+    // Set graphics mode and map video memory
+    if (set_graphic_mode(VBE_864P_DC) != RES_OK) {
+        fprintf(stderr, "Failed to set graphics mode\n");
+        cleanup();
+        exit(EXIT_FAILURE);
+    }
+
+    if (res_vg_init(VBE_864P_DC, &video_mem) != RES_OK) {
+        fprintf(stderr, "Failed to map video memory\n");
+        cleanup();
+        exit(EXIT_FAILURE);
+    }
+
+    // Initialize back buffer
+    if (init_backbuffer(&back_buffer) != RES_OK) {
+        fprintf(stderr, "Failed to initialize back buffer\n");
+        cleanup();
+        exit(EXIT_FAILURE);
+    }
+}
+
+void subscribe_to_devices() {
+    // Subscribe keyboard interrupts
+    if (keyboard_subscribe_int(&kbd_bit) != RES_OK) {
+        fprintf(stderr, "Failed to subscribe keyboard\n");
+        cleanup();
+        exit(EXIT_FAILURE);
+    }
+}
+
 int(proj_main_loop)(int argc, char *argv[]) {
     // Init drivers
     // setup_graphics();
     subscribe_to_devices(&timer_bit, &kbd_bit);
+
+    // Init program state
+    init_buffer();
+    modifiers.caps_lock    = false;
+    modifiers.ctrl         = false;
+    modifiers.lalt         = false;
+    modifiers.ralt         = false;
+    modifiers.shift        = false;
+    modifiers.textModifier = TEXT_MOD_NONE;
+
+
+    // Main event loop
+    // Initialize text buffer
+    if (text_buffer_init(&tb) != RES_OK) {
+        fprintf(stderr, "Failed to init text buffer\n");
+        cleanup();
+        return EXIT_FAILURE;
+    }
+
+    // Initial render so the screen is shown before any keypress
+    render_screen();
 
     // Init program state
     init_buffer();
@@ -61,12 +139,32 @@ int(proj_main_loop)(int argc, char *argv[]) {
 
             // Keyboard interrupts
             if (irq_set & kbd_bit) handle_keyboard_interrupt();
+            printf("\033[2J\033[H");
+            print_buffer_state(modifiers);
+            // Keyboard interrupt: handle key make codes only
+            if (irq_set & kbd_bit) {
+                uint16_t scancode;
+                if (keyboard_ih(&scancode) != RES_OK) continue;
+                uint8_t code     = scancode & 0x7F;
+                bool    is_break = scancode & 0x0080;
+
+                if (is_break)              // ignore key releases
+                    continue;
+
+                if (code == 0x01) {        // ESC make code
+                    running = false;
+                } else if (code == 0x0E) { // Backspace make code
+                    text_buffer_delete_char(&tb);
+                } else {                   // Other printable key make
+                    text_buffer_insert_char(&tb, (char)code);
+                }
+            }
         }
 
         // Clear the screen
-        printf("\033[2J\033[H");
-        print_buffer_state(modifiers);
+        render_screen();
     }
+
 
     // Cleanup and restore text mode
     drivers_cleanup();
@@ -178,3 +276,46 @@ void handle_keyboard_interrupt() {
     // Add character to the buffer
     add_character_to_buffer(character);
 }
+    // Render the window header (title bar)
+    static void render_header(void *buf, uint16_t header_height) {
+        uint32_t header_bg = 0x333333;
+        // Background
+        res_vg_draw_rectangle(buf, 0, 0, mode_info.XResolution, header_height, header_bg);
+        // Text "File" on left, 'X' on right
+        uint16_t text_y = (header_height - FONT_HEIGHT) / 2;
+        draw_string(buf, 5, text_y, "File", 0xFFFFFF);
+        draw_character(buf, mode_info.XResolution - FONT_WIDTH - 5, text_y, 23, 0xFF0000);
+    }
+
+    // Render the window footer
+    static void render_footer(void *buf, uint16_t header_height) {
+        uint32_t footer_bg = 0x333333;
+        uint16_t y0        = mode_info.YResolution - header_height;
+        res_vg_draw_rectangle(buf, 0, y0, mode_info.XResolution, header_height, footer_bg);
+
+        // Draw cursor position (Ln, Col) on the left side
+        char pos_text[32];
+        snprintf(pos_text, sizeof(pos_text), "Ln %u, Col %u", tb.cursor_row + 1, tb.cursor_col + 1);
+        uint16_t text_y = y0 + (header_height - FONT_HEIGHT) / 2;
+        draw_string(buf, 5, text_y, pos_text, 0xFFFFFF);
+    }
+
+    void render_screen() {
+        // Clear screen to grey
+        res_vg_draw_rectangle(back_buffer, 0, 0, mode_info.XResolution, mode_info.YResolution, 0xCCCCCC);
+
+        // Header and footer heights
+        uint16_t header_height = FONT_HEIGHT + 4;
+
+        // Draw header and footer
+        render_header(back_buffer, header_height);
+        render_footer(back_buffer, header_height);
+
+        // Draw text buffer contents below header
+        text_buffer_render(&tb, back_buffer, header_height);
+
+        // TODO: draw cursor here
+
+        // Swap buffers
+        swap_buffers(back_buffer);
+    }

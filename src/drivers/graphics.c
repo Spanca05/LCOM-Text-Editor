@@ -8,10 +8,11 @@
 vbe_mode_info_t mode_info;
 
 // Pointers and variables to store video memory and resolution details
-static void    *video_mem;
+void           *video_mem;
 static uint16_t h_res;
 static uint16_t v_res;
 static uint8_t  bits_per_pixel;
+static uint32_t fb_size = 0;
 
 Result(set_text_mode)() {
     reg86_t reg86;
@@ -48,16 +49,17 @@ Result(res_vg_init)(uint16_t mode, void **video_memory) {
     v_res          = mode_info.YResolution;
     bits_per_pixel = mode_info.BitsPerPixel;
 
-    phys_bytes   phys_addr        = mode_info.PhysBasePtr;
-    unsigned int framebuffer_size = mode_info.XResolution * mode_info.YResolution * (mode_info.BitsPerPixel / 8);
+    phys_bytes phys_addr = mode_info.PhysBasePtr;
+    /* compute and store framebuffer size directly */
+    fb_size              = mode_info.XResolution * mode_info.YResolution * (mode_info.BitsPerPixel / 8);
 
     struct minix_mem_range mr;
     mr.mr_base  = phys_addr;
-    mr.mr_limit = mr.mr_base + framebuffer_size - 1;
+    mr.mr_limit = mr.mr_base + fb_size - 1;
 
     if (sys_privctl(SELF, SYS_PRIV_ADD_MEM, &mr) != RES_OK) return RES_PERMISSION_ERROR;
 
-    void *mapped_mem = vm_map_phys(SELF, (void *)phys_addr, framebuffer_size);
+    void *mapped_mem = vm_map_phys(SELF, (void *)phys_addr, fb_size);
     if (mapped_mem == MAP_FAILED) return RES_MEMORY_ERROR;
 
     reg86_t reg86;
@@ -70,6 +72,7 @@ Result(res_vg_init)(uint16_t mode, void **video_memory) {
     if (sys_int86(&reg86) != RES_OK) return RES_HARDWARE_ERROR;
 
     *video_memory = mapped_mem;
+    video_mem     = mapped_mem; // Linha bênção que fez retângulo desenhar
     return RES_OK;
 }
 
@@ -90,23 +93,30 @@ Result(res_normalize_color)(uint32_t *color) {
     return RES_OK;
 }
 
-Result(res_vg_draw_pixel)(uint16_t x, uint16_t y, uint32_t color) {
+Result(res_vg_draw_pixel)(void *buf, uint16_t x, uint16_t y, uint32_t color) {
     if (x >= h_res || y >= v_res) return RES_INVALID_ARGUMENT;
     uint8_t  bytes_per_pixel = (bits_per_pixel + 7) / 8;
     uint32_t index           = (y * h_res + x) * bytes_per_pixel;
     res_normalize_color(&color);
-    if (memcpy((uint8_t *)video_mem + index, &color, bytes_per_pixel) == NULL) return RES_MEMORY_ERROR;
+    if (memcpy((uint8_t *)buf + index, &color, bytes_per_pixel) == NULL) return RES_MEMORY_ERROR;
     return RES_OK;
 }
 
-Result(res_vg_draw_hline)(uint16_t x, uint16_t y, uint16_t len, uint32_t color) {
+Result(res_vg_draw_hline)(void *buf, uint16_t x, uint16_t y, uint16_t len, uint32_t color) {
     for (uint16_t i = 0; i < len; i++)
-        if (res_vg_draw_pixel(x + i, y, color) != RES_OK) return RES_IO_ERROR;
+        if (res_vg_draw_pixel(buf, x + i, y, color) != RES_OK) return RES_IO_ERROR;
     return RES_OK;
 }
 
-Result(res_vg_draw_rectangle)(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color) {
+Result(res_vg_draw_rectangle)(void *buf, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color) {
     for (uint16_t i = 0; i < height; i++)
-        if (res_vg_draw_hline(x, y + i, width, color) != RES_OK) return RES_IO_ERROR;
+        if (res_vg_draw_hline(buf, x, y + i, width, color) != RES_OK) return RES_IO_ERROR;
+    return RES_OK;
+}
+
+Result(get_framebuffer_size)(uint32_t *size) {
+    if (size == NULL) return RES_INVALID_ARGUMENT;
+    if (fb_size == 0) return RES_UNINITIALIZED;
+    *size = fb_size;
     return RES_OK;
 }
