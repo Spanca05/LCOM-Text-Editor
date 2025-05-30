@@ -2,11 +2,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "../utils/result.h"
+#include "../utils/utils.h"
 #include "key.h"
-#include "result.h"
-#include "utils.h"
 
-Result(scancode_to_key)(uint16_t scancode, Key *key, bool *isPressCode) {
+Result scancode_to_key(uint16_t scancode, Key *key, bool *isPressCode) {
     if (key == NULL) return RES_INVALID_ARGUMENT;
     if (isPressCode == NULL) return RES_INVALID_ARGUMENT;
 
@@ -202,6 +202,18 @@ Result(scancode_to_key)(uint16_t scancode, Key *key, bool *isPressCode) {
     *isPressCode = (scancode & BIT(7)) == 0;
 
     return RES_OK;
+}
+
+bool key_is_printable(Key key) {
+    return
+        // Alphabet keys
+        (key >= KEY_a && key <= KEY_ORDINAL) ||
+
+        // Number keys
+        (key >= KEY_1 && key <= KEY_0) ||
+
+        // Other printable keys
+        (key >= KEY_TAB && key <= KEY_MINUS);
 }
 
 const char *key_names[] = {

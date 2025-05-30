@@ -3,15 +3,16 @@
 
 #include <stdbool.h>
 
-typedef struct {
-    int cx;
-    int cy;
+typedef struct Cursor {
+    int  cx;
+    int  cy;
+    int  counter;
     bool visible;
 } Cursor;
 
-typedef struct {
-    int rx;
-    int ry;
+typedef struct Rato {
+    int  rx;
+    int  ry;
     bool pressed;
 } Rato;
 

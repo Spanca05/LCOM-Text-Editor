@@ -4,10 +4,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "result.h"
+#include "../utils/result.h"
 
 // Enum for every physical key with a scancode (standard 104/105-key PC keyboard)
-typedef enum {
+typedef enum Key {
     KEY_NONE = 0,    // No key pressed
 
     KEY_a,           // 'a' key
@@ -71,10 +71,10 @@ typedef enum {
     KEY_DELETE,      // Delete key
     KEY_BACKSPACE,   // Backspace key
     KEY_ENTER,       // Enter key
+
+
     KEY_TAB,         // Tab key
     KEY_SPACE,       // Spacebar key
-
-
     KEY_BACKSLASH,   // '\\' key
     KEY_APOSTROPHE,  // ''' key
     KEY_QUOTE,       // '«' key
@@ -111,9 +111,10 @@ typedef enum {
     KEY_RGUI,        // Right GUI (Windows/Command) key
 } Key;
 
+Result scancode_to_key(uint16_t scancode, Key *key, bool *isPressCode);
+
+bool key_is_printable(Key key);
+
 extern const char *key_names[];
-
-Result(scancode_to_key)(uint16_t scancode, Key *key, bool *isPressCode);
-
 
 #endif // KEY_H
