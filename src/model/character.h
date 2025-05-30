@@ -187,6 +187,8 @@ TextModifier character_to_text_modifier(Character character);
 
 Character text_modifier_to_character(TextModifier textModifier);
 
+const char* character_to_utf8(Character character);
+
 extern const char *character_names[];
 
 #endif // CHARACTER_H
