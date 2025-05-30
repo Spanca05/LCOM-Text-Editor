@@ -177,7 +177,7 @@ Result add_character_to_buffer(Character character) {
     return RES_OK;
 }
 
-Result remove_character_from_buffer() {
+Result backspace_character_from_buffer() {
     set_visible(&text_buffer.cursor);
     Result result;
 
@@ -206,6 +206,78 @@ Result remove_character_from_buffer() {
 
     // Update cursor position
     text_buffer.cursor.column--;
+
+    return RES_OK;
+}
+
+Result backspace_word_from_buffer() {
+    set_visible(&text_buffer.cursor);
+    Result result;
+
+    // If at the beginning of the line, do nothing
+    if (text_buffer.cursor.column == 1) return RES_OK;
+
+    // Move cursor left and delete characters until a space, tab, or beginning of the line is found
+    do {
+        result = backspace_character_from_buffer();
+        if (result != RES_OK) return result;
+
+        if (text_buffer.cursor.column == 1) break;
+
+        Character prev_char = text_buffer.lines[text_buffer.cursor.line - 1].data[text_buffer.cursor.column - 2];
+        if (prev_char == CHAR_SPACE || prev_char == CHAR_TAB) break;
+    } while (true);
+
+    return RES_OK;
+}
+
+Result delete_character_from_buffer() {
+    set_visible(&text_buffer.cursor);
+    Result result;
+
+    // If at the end of the line
+    if (text_buffer.cursor.column > text_buffer.lines[text_buffer.cursor.line - 1].length) {
+        // If not the last line, merge with the next line
+        if (text_buffer.cursor.line != text_buffer.length) {
+            Line *current_line = &text_buffer.lines[text_buffer.cursor.line - 1];
+            Line *next_line    = &text_buffer.lines[text_buffer.cursor.line];
+
+            // Copy characters from the next line to the current line
+            for (size_t i = 0; i < next_line->length; i++) {
+                result = add_character_at(current_line, next_line->data[i], current_line->length + 1);
+                if (result) return result;
+            }
+
+            // Remove the next line
+            return remove_line_at(text_buffer.cursor.line + 1);
+        } else return RES_DOES_NOT_EXIST; // Nothing to delete
+    }
+
+    // Remove Character from buffer at the cursor position
+    result = remove_character_at(&text_buffer.lines[text_buffer.cursor.line - 1], text_buffer.cursor.column);
+    if (result) return result;
+
+    // Cursor position remains unchanged
+    return RES_OK;
+}
+
+Result delete_word_from_buffer() {
+    set_visible(&text_buffer.cursor);
+    Result result;
+
+    // If at the end of the line, do nothing
+    if (text_buffer.cursor.column > text_buffer.lines[text_buffer.cursor.line - 1].length) return RES_OK;
+
+    // Delete characters until a space, tab, or end of the line is found
+    do {
+        result = delete_character_from_buffer();
+        if (result != RES_OK) return result;
+
+        if (text_buffer.cursor.column > text_buffer.lines[text_buffer.cursor.line - 1].length) break;
+
+        Character next_char = text_buffer.lines[text_buffer.cursor.line - 1].data[text_buffer.cursor.column - 1];
+        if (next_char == CHAR_SPACE || next_char == CHAR_TAB) break;
+    } while (true);
 
     return RES_OK;
 }

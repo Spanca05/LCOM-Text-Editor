@@ -104,7 +104,31 @@ Result add_character_to_buffer(Character character);
  *
  * @return Result indicating success or invalid argument.
  */
-Result remove_character_from_buffer();
+Result backspace_character_from_buffer();
+
+/**
+ * Removes a word from the buffer by backspacing from the current cursor position.
+ * Stops at the beginning of the line or when a space/tab is encountered.
+ *
+ * @return Result indicating success or invalid argument.
+ */
+Result backspace_word_from_buffer();
+
+/**
+ * Deletes a character from the buffer at the current cursor position.
+ * If the cursor is at the end of a line, it merges the current line with the next one.
+ *
+ * @return Result indicating success or does not exist if nothing to delete.
+ */
+Result delete_character_from_buffer();
+
+/**
+ * Deletes a word from the buffer starting at the current cursor position.
+ * Stops at the end of the line or when a space/tab is encountered.
+ *
+ * @return Result indicating success or does not exist if nothing to delete.
+ */
+Result delete_word_from_buffer();
 
 /**
  * Adds a new line to the buffer at the current cursor position.

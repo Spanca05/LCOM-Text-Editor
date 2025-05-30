@@ -108,6 +108,23 @@ void handle_keyboard_interrupt() {
     if (result == RES_UNIMPLEMENTED) printf("Unimplemented KeyCode: 0x%X\n", scancode);
     if (result != RES_OK) return;
 
+    // Handle ctrl key-binds
+    if (modifiers.ctrl) {
+        switch (key) {
+        case KEY_BACKSPACE:
+            if (isPressCode) backspace_word_from_buffer();
+            return;
+        case KEY_DELETE:
+            if (isPressCode) delete_word_from_buffer();
+            return;
+        default: break;
+        }
+    }
+
+    // Handle left alt key-binds
+    if (modifiers.lalt) return; // TODO Implement Left ALT key-binds
+
+
     // Handle non-printable (non-text) keys
     if (!key_is_printable(key)) {
         switch (key) {
@@ -118,7 +135,10 @@ void handle_keyboard_interrupt() {
             if (!isPressCode) modifiers.caps_lock ^= 1;
             break;
         case KEY_BACKSPACE:
-            if (isPressCode) remove_character_from_buffer();
+            if (isPressCode) backspace_character_from_buffer();
+            break;
+        case KEY_DELETE:
+            if (isPressCode) delete_character_from_buffer();
             break;
         case KEY_ENTER:
             if (isPressCode) add_new_line_to_buffer();
@@ -136,13 +156,13 @@ void handle_keyboard_interrupt() {
         case KEY_ARROW_UP:
             if (isPressCode) move_cursor_up();
             break;
-            case KEY_ARROW_DOWN:
+        case KEY_ARROW_DOWN:
             if (isPressCode) move_cursor_down();
             break;
-            case KEY_ARROW_LEFT:
+        case KEY_ARROW_LEFT:
             if (isPressCode) move_cursor_left();
             break;
-            case KEY_ARROW_RIGHT:
+        case KEY_ARROW_RIGHT:
             if (isPressCode) move_cursor_right();
             break;
         default: break;
@@ -150,12 +170,6 @@ void handle_keyboard_interrupt() {
 
         return;
     }
-
-    // Handle ctrl key-binds
-    if (modifiers.ctrl) return; // TODO Implement CTRL key-binds
-
-    // Handle left alt key-binds
-    if (modifiers.lalt) return; // TODO Implement Left ALT key-binds
 
     // Map key + modifiers to character
     result = key_to_character(key, modifiers, &character, &textModifierUsed);
