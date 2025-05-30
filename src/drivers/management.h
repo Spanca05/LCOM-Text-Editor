@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 
-void setup_graphics(void *video_mem);
+void setup_graphics();
 
 void subscribe_to_devices(uint8_t *timer_bit, uint8_t *kbd_bit);
 

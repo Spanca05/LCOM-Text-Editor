@@ -23,7 +23,6 @@ SRCS = main.c \
 		buffer.c\
 		font16x32.c \
 		text_renderer.c \
-		backbuffer.c \
 		text_buffer.c
 
 # additional compilation flags

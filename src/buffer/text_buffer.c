@@ -4,7 +4,7 @@
  */
 
 #include "text_buffer.h"
-#include "../drivers/graphics.h" // for mode_info
+#include "../drivers/graphics.h"
 #include "../graphics/font16x32.h"
 #include "../graphics/text_renderer.h"
 #include "../utils/result.h"
@@ -77,8 +77,8 @@ Result(text_buffer_move_cursor)(TextBuffer *tb, uint16_t row, uint16_t col) {
     return RES_OK;
 }
 
-Result(text_buffer_render)(const TextBuffer *tb, void *buf, uint16_t y_offset) {
-    if (tb == NULL || buf == NULL) return RES_INVALID_ARGUMENT;
+Result(text_buffer_render)(const TextBuffer *tb, uint16_t y_offset) {
+    if (tb == NULL) return RES_INVALID_ARGUMENT;
 
     // Compute available drawing area between header and footer
     uint16_t total_height     = mode_info.YResolution;
@@ -90,7 +90,7 @@ Result(text_buffer_render)(const TextBuffer *tb, void *buf, uint16_t y_offset) {
         for (uint16_t col = 0; col < MAX_COLS; col++) {
             uint16_t x = col * FONT_WIDTH;
             uint16_t y = y_offset + row * FONT_HEIGHT;
-            draw_character(buf, x, y, tb->buffer[row][col], 0xFFFFFF);
+            draw_character(x, y, tb->buffer[row][col], 0xFFFFFF);
         }
     }
     return RES_OK;

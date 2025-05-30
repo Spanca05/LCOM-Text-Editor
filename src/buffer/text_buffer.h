@@ -80,6 +80,6 @@ Result(text_buffer_move_cursor)(TextBuffer *tb, uint16_t row, uint16_t col);
  * @param y_offset Vertical pixel offset to start drawing.
  * @return RES_OK on success, or an error code.
  */
-Result(text_buffer_render)(const TextBuffer *tb, void *buf, uint16_t y_offset);
+Result(text_buffer_render)(const TextBuffer *tb, uint16_t y_offset);
 
 #endif // TEXT_BUFFER_H

@@ -27,47 +27,36 @@ Result(set_graphic_mode)(uint16_t submode);
  * @param video_memory Pointer to store the mapped video memory address.
  * @return Result indicating success or specific error.
  */
-Result(res_vg_init)(uint16_t mode, void **video_memory);
+Result(res_vg_init)(uint16_t mode);
 
 /**
- * @brief Normalizes a color value based on the current mode.
- * @param color The color value to normalize.
- * @return Normalized color value.
- */
-Result(res_normalize_color)(uint32_t *color);
-
-/**
- * @brief Draws a pixel at the specified coordinates.
- * @param buf The buffer where the pixel will be written.
- * @param x The x-coordinate.
- * @param y The y-coordinate.
- * @param color The color of the pixel.
+ * @brief Allocates and initializes a back buffer for double buffering.
  * @return Result indicating success or specific error.
+ *         - RES_OK: Successfully initialized the back buffer.
+ *         - RES_MEMORY_ERROR: Failed to allocate memory for the back buffer.
+ *         - RES_UNINITIALIZED: Framebuffer size is not initialized.
  */
-Result(res_vg_draw_pixel)(void *buf, uint16_t x, uint16_t y, uint32_t color);
+Result(init_backbuffer)();
 
 /**
- * @brief Draws a horizontal line starting at the specified coordinates.
- * @param buf The buffer where the line will be drawn.
- * @param x The starting x-coordinate.
- * @param y The y-coordinate.
- * @param len The length of the line.
- * @param color The color of the line.
+ * @brief Frees the allocated back buffer.
  * @return Result indicating success or specific error.
+ *         - RES_OK: Successfully freed the back buffer.
  */
-Result(res_vg_draw_hline)(void *buf, uint16_t x, uint16_t y, uint16_t len, uint32_t color);
+Result(free_backbuffer)();
 
 /**
- * @brief Draws a rectangle starting at the specified coordinates.
- * @param buf The buffer where the rectangle will be drawn.
- * @param x The starting x-coordinate.
- * @param y The starting y-coordinate.
- * @param width The width of the rectangle.
- * @param height The height of the rectangle.
- * @param color The color of the rectangle.
+ * @brief Swaps the back buffer with the video buffer.
+ *
+ * Copies the contents of the back buffer to the video buffer, effectively
+ * displaying the back buffer on the screen.
+ *
  * @return Result indicating success or specific error.
+ *         - RES_OK: Successfully swapped buffers.
+ *         - RES_UNINITIALIZED: Either the video buffer or back buffer is not initialized.
+ *         - RES_MEMORY_ERROR: Failed to copy data between buffers.
  */
-Result(res_vg_draw_rectangle)(void *buf, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color);
+Result(swap_buffers)();
 
 /**
  * @brief Retrieves the size in bytes of the current video frame buffer.
@@ -85,8 +74,43 @@ Result(res_vg_draw_rectangle)(void *buf, uint16_t x, uint16_t y, uint16_t width,
 Result(get_framebuffer_size)(uint32_t *size);
 
 /**
- * @brief Global pointer to the mapped video memory.
+ * @brief Normalizes a color value based on the current mode.
+ * @param color The color value to normalize.
+ * @return Normalized color value.
  */
-extern void *video_mem;
+Result(res_normalize_color)(uint32_t *color);
+
+/**
+ * @brief Draws a pixel at the specified coordinates.
+ * @param buf The buffer where the pixel will be written.
+ * @param x The x-coordinate.
+ * @param y The y-coordinate.
+ * @param color The color of the pixel.
+ * @return Result indicating success or specific error.
+ */
+Result(res_vg_draw_pixel)(uint16_t x, uint16_t y, uint32_t color);
+
+/**
+ * @brief Draws a horizontal line starting at the specified coordinates.
+ * @param buf The buffer where the line will be drawn.
+ * @param x The starting x-coordinate.
+ * @param y The y-coordinate.
+ * @param len The length of the line.
+ * @param color The color of the line.
+ * @return Result indicating success or specific error.
+ */
+Result(res_vg_draw_hline)(uint16_t x, uint16_t y, uint16_t len, uint32_t color);
+
+/**
+ * @brief Draws a rectangle starting at the specified coordinates.
+ * @param buf The buffer where the rectangle will be drawn.
+ * @param x The starting x-coordinate.
+ * @param y The starting y-coordinate.
+ * @param width The width of the rectangle.
+ * @param height The height of the rectangle.
+ * @param color The color of the rectangle.
+ * @return Result indicating success or specific error.
+ */
+Result(res_vg_draw_rectangle)(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color);
 
 #endif

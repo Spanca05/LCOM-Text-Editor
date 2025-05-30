@@ -5,7 +5,6 @@
 
 #include "buffer/text_buffer.h"
 #include "drivers/VBE.h"
-#include "drivers/backbuffer.h"
 #include "drivers/graphics.h"
 #include "drivers/i8042.h"
 #include "drivers/i8254.h"
@@ -33,14 +32,15 @@ static Modifiers modifiers;
 int main(int argc, char *argv[]) {
     // Initialize LCF and Minix framework
     lcf_set_language("EN-US");
-    if (lcf_start(argc, argv)) return EXIT_FAILURE;
+    lcf_start(argc, argv);
+    lcf_cleanup();
     return EXIT_SUCCESS;
 }
 
 // Program Loop
 int(proj_main_loop)(int argc, char *argv[]) {
     // Init drivers
-    // setup_graphics();
+    setup_graphics();
     subscribe_to_devices(&timer_bit, &kbd_bit);
 
     // Init program state
@@ -75,7 +75,7 @@ int(proj_main_loop)(int argc, char *argv[]) {
     }
 
     // Cleanup and restore text mode
-    cleanup();
+    drivers_cleanup();
     return RES_OK;
 }
 
