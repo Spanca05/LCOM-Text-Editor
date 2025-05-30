@@ -15,6 +15,10 @@
 #include "model/key.h"
 #include "model/modifiers.h"
 #include "utils/result.h"
+#include "model/directory.h"
+
+// Files directory path
+const char *FILES_DIRECTORY = "./src/Files";
 
 // Function definitions
 void        handle_timer_interrupts();
