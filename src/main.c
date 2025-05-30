@@ -14,7 +14,6 @@
 #include "model/character.h"
 #include "model/key.h"
 #include "model/modifiers.h"
-#include "model/utf8_reader.h"
 #include "utils/result.h"
 
 // Function definitions
@@ -37,6 +36,8 @@ static bool      running;
 int main(int argc, char *argv[]) {
     // Initialize LCF and Minix framework
     lcf_set_language("EN-US");
+    lcf_trace_calls("/home/lcom/labs/trace.txt");
+    lcf_log_output("/home/lcom/labs/output.txt");
     lcf_start(argc, argv);
     lcf_cleanup();
     return EXIT_SUCCESS;
@@ -58,7 +59,7 @@ int(proj_main_loop)(int argc, char *argv[]) {
     modifiers.textModifier = TEXT_MOD_NONE;
 
     // Load File
-    read_utf8_file("notes.txt", )
+    // read_utf8_file("notes.txt", )
 
     // Main event loop
     running = true;

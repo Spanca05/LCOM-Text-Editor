@@ -1,8 +1,8 @@
 #ifndef _LCOM_UTF8_READER_H_
 #define _LCOM_UTF8_READER_H_
 
+#include "../model/character.h"
 #include "../utils/result.h"
-#include "character.h"
 #include <stdint.h>
 #include <stdio.h>
 

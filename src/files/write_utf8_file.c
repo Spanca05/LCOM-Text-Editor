@@ -3,13 +3,16 @@
 #include <string.h>
 
 #include "../model/buffer.h"
+#include "write_utf8_file.h"
 
-Result write_utf8_file(const char *filename) {
+Result(write_utf8_file)(const char *filename) {
+    printf("her");
     FILE *file = fopen(filename, "w");
     if (!file) {
         perror("Failed to open file");
         return RES_IO_ERROR;
     }
+
 
     // Write each line from text_buffer to the file
     for (size_t i = 0; i < text_buffer.length; i++) {

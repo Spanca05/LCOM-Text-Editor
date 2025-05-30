@@ -12,8 +12,8 @@
  * the last line.
  *
  * @param filename Path to the output file.
- * @return 0 on success, -1 on failure.
+ * @return RES_OK on success, RES_IO_ERROR on failure.
  */
-Result write_utf8_file(const char *filename);
+Result(write_utf8_file)(const char *filename);
 
 #endif // WRITE_UTF8_FILE_H

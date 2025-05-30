@@ -17,7 +17,7 @@ Result init_buffer() {
     text_buffer.cursor.line      = 1;
     text_buffer.cursor.counter   = 60;
     text_buffer.cursor.visible   = false;
-    text_buffer.autosave_counter = 900;
+    text_buffer.autosave_counter = 100;
 
     // Init Lines array
     Line *lines = (Line *)malloc(BUFFER_SEGMENT_SIZE * sizeof(Line));
@@ -101,8 +101,8 @@ void buffer_clock_tick() {
     // Update autosave counter
     text_buffer.autosave_counter--;
     if (text_buffer.autosave_counter <= 0) {
-        text_buffer.autosave_counter = 900;
-        write_utf8_file('notes.txt');
+        text_buffer.autosave_counter = 100;
+        write_utf8_file("notes.txt");
     }
 }
 
