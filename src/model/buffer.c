@@ -94,57 +94,139 @@ Result remove_line_at(uint64_t position) {
 
 void buffer_clock_tick() { tick_cursor(&text_buffer.cursor); }
 
-Result update_cursor(Key key) {
-    switch (key) {
-    case KEY_ARROW_UP   : text_buffer.cursor.line--; break;
-    case KEY_ARROW_DOWN : text_buffer.cursor.line++; break;
-    case KEY_ARROW_LEFT : text_buffer.cursor.column--; break;
-    case KEY_ARROW_RIGHT: text_buffer.cursor.column++; break;
-    case KEY_ESC        : text_buffer.cursor.visible = false; return RES_OK;
+Result move_cursor_up() {
+    set_visible(&text_buffer.cursor);
 
-    default: return RES_INVALID_ARGUMENT;
+    // Do nothing if on the first line
+    if (text_buffer.cursor.line == 1) {
+        text_buffer.cursor.column = 1;
+        return RES_OK;
     }
 
+    Line *previous_line = &text_buffer.lines[text_buffer.cursor.line - 2];
+
+    // Previous line is smaller
+    if (text_buffer.cursor.column > previous_line->length) text_buffer.cursor.column = previous_line->length + 1;
+
+    text_buffer.cursor.line--;
     return RES_OK;
 }
 
-void add_character_to_buffer(Character character) {
+Result move_cursor_down() {
+    set_visible(&text_buffer.cursor);
+
+    // Do nothing if on the last line
+    if (text_buffer.cursor.line == text_buffer.length) {
+        text_buffer.cursor.column = text_buffer.lines[text_buffer.length - 1].length + 1;
+        return RES_OK;
+    }
+
+    Line *next_line = &text_buffer.lines[text_buffer.cursor.line];
+
+    // Next line is smaller
+    if (text_buffer.cursor.column > next_line->length) text_buffer.cursor.column = next_line->length + 1;
+
+    text_buffer.cursor.line++;
+    return RES_OK;
+}
+
+Result move_cursor_left() {
+    set_visible(&text_buffer.cursor);
+
+    // If at the start of the line, move to the end of the previous line
+    if (text_buffer.cursor.column == 1) {
+        if (text_buffer.cursor.line == 1) return RES_DOES_NOT_EXIST; // Already at the start of the buffer
+
+        text_buffer.cursor.line--;
+        text_buffer.cursor.column = text_buffer.lines[text_buffer.cursor.line - 1].length + 1;
+    } else {
+        // Move one character to the left
+        text_buffer.cursor.column--;
+    };
+    return RES_OK;
+}
+
+Result move_cursor_right() {
+    set_visible(&text_buffer.cursor);
+
+    // If at the end of the line, move to the start of the next line
+    if (text_buffer.cursor.column > text_buffer.lines[text_buffer.cursor.line - 1].length) {
+        if (text_buffer.cursor.line == text_buffer.length)
+            return RES_DOES_NOT_EXIST; // Already at the end of the buffer
+
+        text_buffer.cursor.line++;
+        text_buffer.cursor.column = 1;
+    } else {
+        // Move one character to the right
+        text_buffer.cursor.column++;
+    }
+    return RES_OK;
+}
+
+Result add_character_to_buffer(Character character) {
+    set_visible(&text_buffer.cursor);
     Result result;
 
     // Add Character to buffer
     result = add_character_at(&text_buffer.lines[text_buffer.cursor.line - 1], character, text_buffer.cursor.column);
-    if (result != RES_OK) return;
+    if (result != RES_OK) return result;
 
     // Update cursor position
     text_buffer.cursor.column++;
+
+    return RES_OK;
 }
 
-void remove_character_from_buffer() {
+Result remove_character_from_buffer() {
+    set_visible(&text_buffer.cursor);
     Result result;
+
+    // If on the start of the line
+    if (text_buffer.cursor.column == 1 && text_buffer.cursor.line != 1) {
+        // Move cursor to the end of the previous line
+        text_buffer.cursor.line--;
+        text_buffer.cursor.column = text_buffer.lines[text_buffer.cursor.line - 1].length + 1;
+
+        // Copy characters from the current line to the previous line
+        Line *current_line  = &text_buffer.lines[text_buffer.cursor.line];
+        Line *previous_line = &text_buffer.lines[text_buffer.cursor.line - 1];
+
+        for (size_t i = 0; i < current_line->length; i++) {
+            result = add_character_at(previous_line, current_line->data[i], previous_line->length + 1);
+            if (result) return result;
+        }
+
+        // Remove the current line
+        return remove_line_at(text_buffer.cursor.line + 1);
+    }
 
     // Remove Character from buffer
     result = remove_character_at(&text_buffer.lines[text_buffer.cursor.line - 1], text_buffer.cursor.column - 1);
-    if (result != RES_OK) return;
+    if (result) return result;
 
     // Update cursor position
     text_buffer.cursor.column--;
+
+    return RES_OK;
 }
 
-void add_new_line_to_buffer() {
+Result add_new_line_to_buffer() {
+    set_visible(&text_buffer.cursor);
     Result result;
 
     result = add_line_at(text_buffer.cursor.line + 1);
-    if (result != RES_OK) return;
+    if (result) return result;
 
     // If cursor is in the middle of the line
     if (text_buffer.cursor.column <= text_buffer.lines[text_buffer.cursor.line - 1].length) {
         // Copy characters from the current line to the new line
         Line *current_line = &text_buffer.lines[text_buffer.cursor.line - 1];
-        Line *new_line = &text_buffer.lines[text_buffer.cursor.line];
+        Line *new_line     = &text_buffer.lines[text_buffer.cursor.line];
 
-        for (size_t i = text_buffer.cursor.column - 1; i < current_line->length; i++) 
-            add_character_at(new_line, current_line->data[i], new_line->length + 1);
-        
+        for (size_t i = text_buffer.cursor.column - 1; i < current_line->length; i++) {
+            result = add_character_at(new_line, current_line->data[i], new_line->length + 1);
+            if (result) return result;
+        }
 
         // Remove characters from the current line after the cursor
         current_line->length = text_buffer.cursor.column - 1;
@@ -153,4 +235,6 @@ void add_new_line_to_buffer() {
     // Update cursor position
     text_buffer.cursor.line++;
     text_buffer.cursor.column = 1;
+
+    return RES_OK;
 }

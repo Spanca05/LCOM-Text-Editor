@@ -70,9 +70,10 @@ int(proj_main_loop)(int argc, char *argv[]) {
 
             // Keyboard interrupts
             if (irq_set & kbd_bit) handle_keyboard_interrupt();
-        }
 
-        render_screen();
+            // Redraw the screen
+            render_screen();
+        }
     }
 
     // Cleanup and restore text mode
@@ -80,13 +81,17 @@ int(proj_main_loop)(int argc, char *argv[]) {
     return RES_OK;
 }
 
-// Timer Interrupt Handler
+/**
+ * Handles timer interrupts by updating the cursor state.
+ */
 void handle_timer_interrupts() {
     buffer_clock_tick();
     // TODO Handle timer interrupts
 }
 
-// Keyboard Interrupt Handler
+/**
+ * Handles keyboard interrupts by processing key inputs and updating the buffer or cursor state.
+ */
 void handle_keyboard_interrupt() {
     Result    result;
     uint16_t  scancode;
@@ -112,26 +117,33 @@ void handle_keyboard_interrupt() {
         case KEY_CAPSLOCK:
             if (!isPressCode) modifiers.caps_lock ^= 1;
             break;
-
-        case KEY_LCTRL:
-        case KEY_RCTRL : modifiers.ctrl = isPressCode; break;
-        case KEY_LSHIFT:
-        case KEY_RSHIFT: modifiers.shift = isPressCode; break;
-        case KEY_LALT  : modifiers.lalt = isPressCode; break;
-        case KEY_RALT  : modifiers.ralt = isPressCode; break;
-
-        case KEY_ARROW_UP:
-        case KEY_ARROW_DOWN:
-        case KEY_ARROW_LEFT:
-        case KEY_ARROW_RIGHT:
-            if (isPressCode) update_cursor(key);
-            break;
-
         case KEY_BACKSPACE:
             if (isPressCode) remove_character_from_buffer();
             break;
         case KEY_ENTER:
             if (isPressCode) add_new_line_to_buffer();
+            break;
+
+        case KEY_LCTRL:
+        case KEY_RCTRL: modifiers.ctrl = isPressCode; break;
+
+        case KEY_LSHIFT:
+        case KEY_RSHIFT: modifiers.shift = isPressCode; break;
+
+        case KEY_LALT: modifiers.lalt = isPressCode; break;
+        case KEY_RALT: modifiers.ralt = isPressCode; break;
+
+        case KEY_ARROW_UP:
+            if (isPressCode) move_cursor_up();
+            break;
+            case KEY_ARROW_DOWN:
+            if (isPressCode) move_cursor_down();
+            break;
+            case KEY_ARROW_LEFT:
+            if (isPressCode) move_cursor_left();
+            break;
+            case KEY_ARROW_RIGHT:
+            if (isPressCode) move_cursor_right();
             break;
         default: break;
         }
@@ -140,16 +152,10 @@ void handle_keyboard_interrupt() {
     }
 
     // Handle ctrl key-binds
-    if (modifiers.ctrl) {
-        // TODO Implement CTRL key-binds
-        return;
-    }
+    if (modifiers.ctrl) return; // TODO Implement CTRL key-binds
 
     // Handle left alt key-binds
-    if (modifiers.lalt) {
-        // TODO Implement Left ALT key-binds
-        return;
-    }
+    if (modifiers.lalt) return; // TODO Implement Left ALT key-binds
 
     // Map key + modifiers to character
     result = key_to_character(key, modifiers, &character, &textModifierUsed);
@@ -180,21 +186,25 @@ void handle_keyboard_interrupt() {
     // Ignore release events
     if (!isPressCode) return;
 
-    // If a text modifier exits and was not used
-    // Add it to the buffer and clear it
+    // If a text modifier exists and was not used
+    // Add it to the buffer
     if (modifiers.textModifier != TEXT_MOD_NONE && !textModifierUsed)
         add_character_to_buffer(text_modifier_to_character(modifiers.textModifier));
 
     // If a text modifier exits and the key was a space
     // Add only the text modifier to the buffer
     if (modifiers.textModifier != TEXT_MOD_NONE && character == CHAR_SPACE) return;
+
+    // Clear the text modifier
     modifiers.textModifier = TEXT_MOD_NONE;
 
     // Add character to the buffer
     add_character_to_buffer(character);
 }
 
-// Render the text editor main window
+/**
+ * Renders the main screen of the text editor, including the header, footer, and text buffer.
+ */
 void render_screen() {
     // Clear screen to grey
     res_vg_draw_rectangle(0, 0, mode_info.XResolution, mode_info.YResolution, 0x272A32);
@@ -213,7 +223,11 @@ void render_screen() {
     swap_buffers();
 }
 
-// Render the window header (title bar)
+/**
+ * Renders the header of the text editor window.
+ *
+ * @param header_height The height of the header.
+ */
 static void render_header(uint16_t header_height) {
     uint32_t header_bg = 0x171A22;
     // Background
@@ -228,7 +242,11 @@ static void render_header(uint16_t header_height) {
     draw_character(mode_info.XResolution - FONT_WIDTH * 1.5, text_y, CHAR_X, 0xFFFFFF);
 }
 
-// Render the window footer
+/**
+ * Renders the footer of the text editor window.
+ *
+ * @param header_height The height of the header, used to calculate the footer position.
+ */
 static void render_footer(uint16_t header_height) {
     uint32_t footer_bg = 0x171A22;
     uint16_t y0        = mode_info.YResolution - header_height;

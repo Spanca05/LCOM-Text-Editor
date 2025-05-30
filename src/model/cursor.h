@@ -15,4 +15,8 @@ typedef struct Cursor {
 
 void tick_cursor(Cursor *cursor);
 
+void set_visible(Cursor *cursor);
+
+void set_invisible(Cursor *cursor);
+
 #endif // CURSOR_H

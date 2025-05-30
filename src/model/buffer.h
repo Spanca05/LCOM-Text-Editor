@@ -5,7 +5,7 @@
 #include "cursor.h"
 #include "line.h"
 
-#define BUFFER_SEGMENT_SIZE 100
+#define BUFFER_SEGMENT_SIZE 5
 
 typedef struct Buffer {
     Cursor cursor;
@@ -57,22 +57,62 @@ Result remove_line_at(uint64_t position);
 void buffer_clock_tick();
 
 /**
- * Updates the cursor's position based on the given key input.
+ * Moves the cursor up by one line. If the cursor is already on the first line,
+ * it will remain there.
  *
- * @param key The key input to update the cursor.
- * @return Result indicating success or invalid argument.
+ * @return Result indicating success.
  */
-Result update_cursor(Key key);
+Result move_cursor_up();
+
+/**
+ * Moves the cursor down by one line. If the cursor is already on the last line,
+ * it will remain there.
+ *
+ * @return Result indicating success.
+ */
+Result move_cursor_down();
+
+/**
+ * Moves the cursor left by one character. If the cursor is at the start of a line,
+ * it moves to the end of the previous line. If already at the start of the buffer,
+ * it does nothing.
+ *
+ * @return Result indicating success or does not exist if at the start of the buffer.
+ */
+Result move_cursor_left();
+
+/**
+ * Moves the cursor right by one character. If the cursor is at the end of a line,
+ * it moves to the start of the next line. If already at the end of the buffer,
+ * it does nothing.
+ *
+ * @return Result indicating success or does not exist if at the end of the buffer.
+ */
+Result move_cursor_right();
 
 /**
  * Adds a character to the buffer at the current cursor position.
  *
- * @param character The character to be added.
+ * @param character The character to add.
+ * @return Result indicating success or memory error.
  */
-void add_character_to_buffer(Character character);
+Result add_character_to_buffer(Character character);
 
-void remove_character_from_buffer();
+/**
+ * Removes a character from the buffer at the current cursor position.
+ * If the cursor is at the start of a line, it merges the current line with the previous one.
+ *
+ * @return Result indicating success or invalid argument.
+ */
+Result remove_character_from_buffer();
 
-void add_new_line_to_buffer();
+/**
+ * Adds a new line to the buffer at the current cursor position.
+ * If the cursor is in the middle of a line, the characters after the cursor
+ * are moved to the new line.
+ *
+ * @return Result indicating success or memory error.
+ */
+Result add_new_line_to_buffer();
 
 #endif // BUFFER_H
