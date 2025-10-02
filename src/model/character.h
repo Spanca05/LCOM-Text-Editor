@@ -239,9 +239,20 @@ Character text_modifier_to_character(TextModifier textModifier);
 Result string_to_characters(char *string, uint64_t n, Character **characters);
 
 /**
+ * @brief Converts a Character enum to its UTF-8 string representation.
+ *
+ * Maps a given Character enum value to its corresponding UTF-8 encoded string.
+ *
+ * @param character The Character enum value to convert.
+ * @return A pointer to the UTF-8 string representation of the character.
+ */
+const char *character_to_utf8(Character character);
+
+/**
  * @brief Array of character names.
  *
  * Provides string representations of the Character enum values for debugging or display purposes.
+ * Each index corresponds to a Character enum value.
  */
 extern const char *character_names[];
 

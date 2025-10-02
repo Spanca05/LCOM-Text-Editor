@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../files/write_utf8_file.h"
 #include "buffer.h"
 #include "character.h"
 #include "line.h"
@@ -12,10 +13,11 @@ Buffer text_buffer;
 
 Result init_buffer() {
     // Init cursor
-    text_buffer.cursor.column  = 1;
-    text_buffer.cursor.line    = 1;
-    text_buffer.cursor.counter = 60;
-    text_buffer.cursor.visible = false;
+    text_buffer.cursor.column    = 1;
+    text_buffer.cursor.line      = 1;
+    text_buffer.cursor.counter   = 60;
+    text_buffer.cursor.visible   = false;
+    text_buffer.autosave_counter = 100;
 
     // Init Lines array
     Line *lines = (Line *)malloc(BUFFER_SEGMENT_SIZE * sizeof(Line));
@@ -92,7 +94,17 @@ Result remove_line_at(uint64_t position) {
     return RES_OK;
 }
 
-void buffer_clock_tick() { tick_cursor(&text_buffer.cursor); }
+void buffer_clock_tick() {
+    // Update cursor counter
+    tick_cursor(&text_buffer.cursor);
+
+    // Update autosave counter
+    text_buffer.autosave_counter--;
+    if (text_buffer.autosave_counter <= 0) {
+        text_buffer.autosave_counter = 100;
+        write_utf8_file("notes.txt");
+    }
+}
 
 Result move_cursor_up() {
     set_visible(&text_buffer.cursor);

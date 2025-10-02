@@ -280,6 +280,180 @@ Result string_to_characters(char *string, uint64_t n, Character **characters) {
     return RES_OK;
 }
 
+const char *character_to_utf8(Character character) {
+    switch (character) {
+    case CHAR_NONE: return "";
+
+    // Basic ASCII lowercase
+    case CHAR_a: return "a";
+    case CHAR_b: return "b";
+    case CHAR_c: return "c";
+    case CHAR_d: return "d";
+    case CHAR_e: return "e";
+    case CHAR_f: return "f";
+    case CHAR_g: return "g";
+    case CHAR_h: return "h";
+    case CHAR_i: return "i";
+    case CHAR_j: return "j";
+    case CHAR_k: return "k";
+    case CHAR_l: return "l";
+    case CHAR_m: return "m";
+    case CHAR_n: return "n";
+    case CHAR_o: return "o";
+    case CHAR_p: return "p";
+    case CHAR_q: return "q";
+    case CHAR_r: return "r";
+    case CHAR_s: return "s";
+    case CHAR_t: return "t";
+    case CHAR_u: return "u";
+    case CHAR_v: return "v";
+    case CHAR_w: return "w";
+    case CHAR_x: return "x";
+    case CHAR_y: return "y";
+    case CHAR_z: return "z";
+
+    // Basic ASCII uppercase
+    case CHAR_A: return "A";
+    case CHAR_B: return "B";
+    case CHAR_C: return "C";
+    case CHAR_D: return "D";
+    case CHAR_E: return "E";
+    case CHAR_F: return "F";
+    case CHAR_G: return "G";
+    case CHAR_H: return "H";
+    case CHAR_I: return "I";
+    case CHAR_J: return "J";
+    case CHAR_K: return "K";
+    case CHAR_L: return "L";
+    case CHAR_M: return "M";
+    case CHAR_N: return "N";
+    case CHAR_O: return "O";
+    case CHAR_P: return "P";
+    case CHAR_Q: return "Q";
+    case CHAR_R: return "R";
+    case CHAR_S: return "S";
+    case CHAR_T: return "T";
+    case CHAR_U: return "U";
+    case CHAR_V: return "V";
+    case CHAR_W: return "W";
+    case CHAR_X: return "X";
+    case CHAR_Y: return "Y";
+    case CHAR_Z: return "Z";
+
+    // Numbers
+    case CHAR_0: return "0";
+    case CHAR_1: return "1";
+    case CHAR_2: return "2";
+    case CHAR_3: return "3";
+    case CHAR_4: return "4";
+    case CHAR_5: return "5";
+    case CHAR_6: return "6";
+    case CHAR_7: return "7";
+    case CHAR_8: return "8";
+    case CHAR_9: return "9";
+
+    // Special characters
+    case CHAR_SPACE      : return " ";
+    case CHAR_NEWLINE    : return "\n";
+    case CHAR_TAB        : return "\t";
+    case CHAR_EXCLAMATION: return "!";
+    case CHAR_QUOTE      : return "\"";
+    case CHAR_HASH       : return "#";
+    case CHAR_DOLLAR     : return "$";
+    case CHAR_PERCENT    : return "%";
+    case CHAR_AMPERSAND  : return "&";
+    case CHAR_APOSTROPHE : return "'";
+    case CHAR_LPAREN     : return "(";
+    case CHAR_RPAREN     : return ")";
+    case CHAR_ASTERISK   : return "*";
+    case CHAR_PLUS       : return "+";
+    case CHAR_COMMA      : return ",";
+    case CHAR_MINUS      : return "-";
+    case CHAR_DOT        : return ".";
+    case CHAR_SLASH      : return "/";
+    case CHAR_COLON      : return ":";
+    case CHAR_SEMICOLON  : return ";";
+    case CHAR_LESS       : return "<";
+    case CHAR_EQUAL      : return "=";
+    case CHAR_GREATER    : return ">";
+    case CHAR_QUESTION   : return "?";
+    case CHAR_AT         : return "@";
+    case CHAR_LBRACKET   : return "[";
+    case CHAR_BACKSLASH  : return "\\";
+    case CHAR_RBRACKET   : return "]";
+    case CHAR_CIRCUMFLEX : return "^";
+    case CHAR_UNDERSCORE : return "_";
+    case CHAR_GRAVE      : return "`";
+    case CHAR_LCURLY     : return "{";
+    case CHAR_PIPE       : return "|";
+    case CHAR_RCURLY     : return "}";
+    case CHAR_TILDE      : return "~";
+
+    // Portuguese characters
+    case CHAR_a_ACUTE : return "á";
+    case CHAR_a_GRAVE : return "à";
+    case CHAR_a_CIRC  : return "â";
+    case CHAR_a_TILDE : return "ã";
+    case CHAR_a_UMLAUT: return "ä";
+    case CHAR_a_RING  : return "å";
+    case CHAR_e_ACUTE : return "é";
+    case CHAR_e_GRAVE : return "è";
+    case CHAR_e_CIRC  : return "ê";
+    case CHAR_e_UMLAUT: return "ë";
+    case CHAR_i_ACUTE : return "í";
+    case CHAR_i_GRAVE : return "ì";
+    case CHAR_i_CIRC  : return "î";
+    case CHAR_i_UMLAUT: return "ï";
+    case CHAR_o_ACUTE : return "ó";
+    case CHAR_o_GRAVE : return "ò";
+    case CHAR_o_CIRC  : return "ô";
+    case CHAR_o_TILDE : return "õ";
+    case CHAR_o_UMLAUT: return "ö";
+    case CHAR_u_ACUTE : return "ú";
+    case CHAR_u_GRAVE : return "ù";
+    case CHAR_u_CIRC  : return "û";
+    case CHAR_u_UMLAUT: return "ü";
+
+    case CHAR_A_ACUTE : return "Á";
+    case CHAR_A_GRAVE : return "À";
+    case CHAR_A_CIRC  : return "Â";
+    case CHAR_A_TILDE : return "Ã";
+    case CHAR_A_UMLAUT: return "Ä";
+    case CHAR_A_RING  : return "Å";
+    case CHAR_E_ACUTE : return "É";
+    case CHAR_E_GRAVE : return "È";
+    case CHAR_E_CIRC  : return "Ê";
+    case CHAR_E_UMLAUT: return "Ë";
+    case CHAR_I_ACUTE : return "Í";
+    case CHAR_I_GRAVE : return "Ì";
+    case CHAR_I_CIRC  : return "Î";
+    case CHAR_I_UMLAUT: return "Ï";
+    case CHAR_O_ACUTE : return "Ó";
+    case CHAR_O_GRAVE : return "Ò";
+    case CHAR_O_CIRC  : return "Ô";
+    case CHAR_O_TILDE : return "Õ";
+    case CHAR_O_UMLAUT: return "Ö";
+    case CHAR_U_ACUTE : return "Ú";
+    case CHAR_U_GRAVE : return "Ù";
+    case CHAR_U_CIRC  : return "Û";
+    case CHAR_U_UMLAUT: return "Ü";
+
+    case CHAR_CEDILLA      : return "ç";
+    case CHAR_CEDILLA_UPPER: return "Ç";
+    case CHAR_LEFT_ANGLE   : return "«";
+    case CHAR_RIGHT_ANGLE  : return "»";
+    case CHAR_ACUTE        : return "´";
+    case CHAR_MOI          : return "º";
+    case CHAR_FOI          : return "ª";
+    case CHAR_POUND        : return "£";
+    case CHAR_SECTION      : return "§";
+    case CHAR_EURO         : return "€";
+    case CHAR_TREMA        : return "¨";
+
+    default: return "?";
+    }
+}
+
 const char *character_names[] = {
     [CHAR_NONE]          = "CHAR_NONE",
     [CHAR_a]             = "CHAR_a",

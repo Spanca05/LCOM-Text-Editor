@@ -8,10 +8,11 @@
 #define BUFFER_SEGMENT_SIZE 5
 
 typedef struct Buffer {
-    Cursor cursor;
-    Line  *lines;
-    size_t capacity;
-    size_t length;
+    Cursor   cursor;
+    Line    *lines;
+    size_t   capacity;
+    size_t   length;
+    uint64_t autosave_counter;
 } Buffer;
 
 extern Buffer text_buffer;
@@ -52,7 +53,9 @@ Result add_line_at(uint64_t position);
 Result remove_line_at(uint64_t position);
 
 /**
- * Updates the cursor's state based on a clock tick.
+ * Updates the cursor's state based on a clock tick and handles autosaving the buffer.
+ * The autosave counter is decremented on each tick, and when it reaches zero,
+ * the buffer is saved to a file and the counter is reset.
  */
 void buffer_clock_tick();
 

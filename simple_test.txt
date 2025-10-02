@@ -1,0 +1,3 @@
+Este é um arquivo simples.
+Sem acentos especiais.
+Apenas texto básico.

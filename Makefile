@@ -6,6 +6,7 @@ PROG=proj
 .PATH: ${.CURDIR}/src/drivers
 .PATH: ${.CURDIR}/src/model
 .PATH: ${.CURDIR}/src/graphics
+.PATH: ${.CURDIR}/src/files
  
 
 # source code files to be compiled
@@ -26,7 +27,9 @@ SRCS = main.c \
 		\
 		font16x32.c \
 		text_renderer.c \
-		buffer_renderer.c
+		buffer_renderer.c \
+		utf8_reader.c \
+		write_utf8_file.c
 
 # additional compilation flags
 # "-Wall -Wextra -Werror -I . -std=c11 -Wno-unused-parameter" are already set
